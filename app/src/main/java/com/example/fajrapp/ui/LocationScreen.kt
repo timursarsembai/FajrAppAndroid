@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -151,10 +150,9 @@ fun LocationScreen(
                 singleLine = true,
                 trailingIcon = {
                     if (uiState.isSearchingCities) {
-                        CircularProgressIndicator(
-                            color = Color.White.copy(alpha = 0.8f),
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.size(16.dp)
+                        Text(
+                            text = "...",
+                            color = Color.White.copy(alpha = 0.8f)
                         )
                     }
                 },

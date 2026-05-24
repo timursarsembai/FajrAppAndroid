@@ -174,3 +174,17 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: устранить повторный вылет при поиске города
+- Статус: выполнено
+- Что сделано:
+  - По `logcat` выявлена точная причина падения:
+    - `NoSuchMethodError` внутри `CircularProgressIndicator` (Compose animation/runtime mismatch на устройстве).
+  - Удален анимированный `CircularProgressIndicator` из `TextField` при поиске.
+  - Заменен на статичный безопасный индикатор (`"..."`) без анимации.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/LocationScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство
