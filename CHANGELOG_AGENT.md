@@ -57,3 +57,27 @@
   - `CHANGELOG_AGENT.md`
 - Проверка:
   - `git push origin main` выполнен успешно.
+
+### Задача: реализовать пункт Location в настройках
+- Статус: выполнено
+- Что сделано:
+  - Добавлен экран `LocationScreen` с действием "Use current location".
+  - Подключена навигация `settings -> location`.
+  - Убран хардкод `Moscow, Russia`: подпись локации теперь берется из `SettingsViewModel`.
+  - В `SettingsViewModel` добавлены:
+    - состояние `locationSubtitle`,
+    - флаг `isUpdatingLocation`,
+    - метод `updateLocationFromDevice()` с сохранением в `SharedPreferences`.
+  - Добавлены новые строковые ресурсы для EN/RU.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/LocationScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/SettingsScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на эмулятор
+  - `adb shell am start -n com.example.fajrapp/com.example.fajrapp.MainActivity` -> экран запускается

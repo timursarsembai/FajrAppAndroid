@@ -15,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fajrapp.viewmodel.SettingsViewModel
 import com.example.fajrapp.ui.LanguageSelectionScreen
+import com.example.fajrapp.ui.LocationScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -117,7 +118,8 @@ class MainActivity : ComponentActivity() {
                                     hazeState = hazeState,
                                     viewModel = settingsViewModel, // We need to ensure this instance is shared or valid
                                     onBack = { navController.popBackStack() },
-                                    onLanguageClick = { navController.navigate("languages") }
+                                    onLanguageClick = { navController.navigate("languages") },
+                                    onLocationClick = { navController.navigate("location") }
                                 )
                             }
                             
@@ -129,6 +131,20 @@ class MainActivity : ComponentActivity() {
                                 popExitTransition = { fadeOut(animationSpec = tween(50)) }
                             ) {
                                 LanguageSelectionScreen(
+                                    viewModel = settingsViewModel,
+                                    hazeState = hazeState,
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(
+                                "location",
+                                enterTransition = { fadeIn(animationSpec = tween(50)) },
+                                exitTransition = { fadeOut(animationSpec = tween(50)) },
+                                popEnterTransition = { fadeIn(animationSpec = tween(50)) },
+                                popExitTransition = { fadeOut(animationSpec = tween(50)) }
+                            ) {
+                                LocationScreen(
                                     viewModel = settingsViewModel,
                                     hazeState = hazeState,
                                     onBack = { navController.popBackStack() }

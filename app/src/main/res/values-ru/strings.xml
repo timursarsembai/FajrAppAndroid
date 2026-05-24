@@ -13,9 +13,12 @@
     
     <!-- Settings Subtitles -->
     <string name="settings_location_unknown">Неизвестно</string>
+    <string name="settings_location_updating">Обновляем локацию...</string>
     <string name="settings_method_default">Умм аль-Кура</string>
     <string name="settings_offset_default">0 минут</string>
     <string name="settings_notifications_on">Включены</string>
+    <string name="location_use_current">Использовать текущую локацию</string>
+    <string name="location_hint">Нажмите, чтобы определить и сохранить текущий город</string>
     
     <!-- Common -->
     <string name="str_loading">Загрузка...</string>
