@@ -5,15 +5,12 @@ import android.location.Geocoder
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.batoulapps.adhan.CalculationMethod
 import com.batoulapps.adhan.Coordinates
-import com.batoulapps.adhan.Madhab
 import com.batoulapps.adhan.PrayerTimes
 import com.batoulapps.adhan.data.DateComponents
 import com.example.fajrapp.R
 import com.example.fajrapp.data.LocationManager
 import com.example.fajrapp.data.PreferencesManager
-import com.example.fajrapp.data.SavedLocation
 import com.example.fajrapp.model.PrayerData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +19,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.chrono.HijrahDate
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 data class PrayerUiState(
@@ -34,13 +33,19 @@ data class PrayerUiState(
     val isLoading: Boolean = true
 )
 
+private data class PrayerEntry(
+    val offsetKey: String,
+    val name: String,
+    val arabicName: String,
+    val time: Date
+)
+
 class PrayerViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(PrayerUiState())
     val uiState: StateFlow<PrayerUiState> = _uiState.asStateFlow()
 
     private val locationManager = LocationManager(application)
     private val prefsManager = PreferencesManager(application)
-    private var prayerTimesData: PrayerTimes? = null
     private var nextPrayerTime: Date? = null
     private var lastConfigSignature: String? = null
 
@@ -51,13 +56,12 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.value = _uiState.value.copy(locationName = getString(R.string.str_loading))
         loadInitialData()
     }
-    
+
     private fun getString(resId: Int): String {
         return getApplication<Application>().getString(resId)
     }
 
     private fun loadInitialData() {
-        // 1. Load cached location immediately
         val saved = prefsManager.getSavedLocation()
         if (saved != null) {
             currentCoordinates = Coordinates(saved.latitude, saved.longitude)
@@ -68,9 +72,8 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             maybeReloadConfiguration(force = true)
         }
 
-        startTimer() // Always start timer
+        startTimer()
 
-        // 2. Fetch fresh location in background
         viewModelScope.launch {
             try {
                 val location = locationManager.getCurrentLocation()
@@ -78,12 +81,16 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                     val isDifferent = if (saved != null) {
                         val results = FloatArray(1)
                         android.location.Location.distanceBetween(
-                            saved.latitude, saved.longitude,
-                            location.latitude, location.longitude,
+                            saved.latitude,
+                            saved.longitude,
+                            location.latitude,
+                            location.longitude,
                             results
                         )
-                        results[0] > 1000 // Update if moved > 1km
-                    } else true
+                        results[0] > 1000
+                    } else {
+                        true
+                    }
 
                     if (isDifferent) {
                         currentCoordinates = Coordinates(location.latitude, location.longitude)
@@ -91,11 +98,10 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                         maybeReloadConfiguration(force = true)
                     }
                 } else if (saved == null) {
-                    // Only fallback if nothing saved AND fetch failed
                     _uiState.value = _uiState.value.copy(locationName = "Almaty, Kazakhstan")
                     maybeReloadConfiguration(force = true)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 if (saved == null) {
                     _uiState.value = _uiState.value.copy(locationName = "Almaty, Kazakhstan")
                 }
@@ -106,11 +112,10 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private fun updateLocationNameAndSave(lat: Double, lon: Double) {
         viewModelScope.launch {
             try {
-                // Use default locale for Geocoder to get localized city names if possible
                 val geocoder = Geocoder(getApplication(), Locale.getDefault())
                 @Suppress("DEPRECATION")
                 val addresses = geocoder.getFromLocation(lat, lon, 1)
-                
+
                 val locationName = if (!addresses.isNullOrEmpty()) {
                     val city = addresses[0].locality ?: addresses[0].subAdminArea ?: ""
                     val country = addresses[0].countryName ?: ""
@@ -120,12 +125,9 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                 }
 
                 _uiState.value = _uiState.value.copy(locationName = locationName)
-                
-                // Save to cache
                 prefsManager.saveLocation(lat, lon, locationName)
-                
-            } catch (e: Exception) {
-                // Ignore errors
+            } catch (_: Exception) {
+                // Ignore reverse geocoding errors.
             }
         }
     }
@@ -143,66 +145,67 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         val params = method.parameters
         params.madhab = madhab
 
-        prayerTimesData = PrayerTimes(currentCoordinates, dateComponents, params)
-
+        val offsets = prefsManager.getPrayerOffsets(SettingsViewModel.PRAYER_OFFSET_KEYS)
+        val prayerTimes = PrayerTimes(currentCoordinates, dateComponents, params)
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         val now = Date()
 
+        val entries = listOf(
+            PrayerEntry(SettingsViewModel.OFFSET_FAJR, getString(R.string.prayer_fajr), "الفجر", prayerTimes.fajr),
+            PrayerEntry(SettingsViewModel.OFFSET_SUNRISE, getString(R.string.prayer_sunrise), "الشروق", prayerTimes.sunrise),
+            PrayerEntry(SettingsViewModel.OFFSET_DHUHR, getString(R.string.prayer_dhuhr), "الظهر", prayerTimes.dhuhr),
+            PrayerEntry(SettingsViewModel.OFFSET_ASR, getString(R.string.prayer_asr), "العصر", prayerTimes.asr),
+            PrayerEntry(SettingsViewModel.OFFSET_MAGHRIB, getString(R.string.prayer_maghrib), "المغرب", prayerTimes.maghrib),
+            PrayerEntry(SettingsViewModel.OFFSET_ISHA, getString(R.string.prayer_isha), "العشاء", prayerTimes.isha)
+        ).map { entry ->
+            entry.copy(time = applyOffset(entry.time, offsets[entry.offsetKey] ?: 0))
+        }
+
         val prayersList = mutableListOf<PrayerData>()
-        
-        prayerTimesData?.let { times ->
-            val prayerDefinitions = listOf(
-                Triple(getString(R.string.prayer_fajr), times.fajr, "الفجر"),
-                Triple(getString(R.string.prayer_sunrise), times.sunrise, "الشروق"),
-                Triple(getString(R.string.prayer_dhuhr), times.dhuhr, "الظهر"),
-                Triple(getString(R.string.prayer_asr), times.asr, "العصر"),
-                Triple(getString(R.string.prayer_maghrib), times.maghrib, "المغرب"),
-                Triple(getString(R.string.prayer_isha), times.isha, "العشاء")
+        var foundNext = false
+
+        for (entry in entries) {
+            val isPassed = now.after(entry.time)
+            val isNext = !isPassed && !foundNext
+            if (isNext) {
+                foundNext = true
+                nextPrayerTime = entry.time
+            }
+
+            prayersList.add(
+                PrayerData(
+                    name = entry.name,
+                    arabicName = entry.arabicName,
+                    time = timeFormatter.format(entry.time),
+                    isNext = isNext,
+                    isPassed = isPassed && !isNext,
+                    timeLeft = if (isNext) "${getString(R.string.timer_prefix)} --:--:--" else null
+                )
+            )
+        }
+
+        if (!foundNext && prayersList.isNotEmpty()) {
+            val tomorrow = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, 1) }
+            val tomorrowComponents = DateComponents(
+                tomorrow.get(Calendar.YEAR),
+                tomorrow.get(Calendar.MONTH) + 1,
+                tomorrow.get(Calendar.DAY_OF_MONTH)
+            )
+            val tomorrowTimes = PrayerTimes(currentCoordinates, tomorrowComponents, params)
+            nextPrayerTime = applyOffset(
+                tomorrowTimes.fajr,
+                offsets[SettingsViewModel.OFFSET_FAJR] ?: 0
             )
 
-            var foundNext = false
-            for ((name, time, arabicName) in prayerDefinitions) {
-                val isPassed = now.after(time)
-                val isNext = !isPassed && !foundNext
-                if (isNext) {
-                    foundNext = true
-                    nextPrayerTime = time
-                }
-
-                prayersList.add(
-                    PrayerData(
-                        name = name,
-                        arabicName = arabicName,
-                        time = timeFormatter.format(time),
-                        isNext = isNext,
-                        isPassed = isPassed && !isNext, 
-                        timeLeft = if (isNext) "${getString(R.string.timer_prefix)} --:--:--" else null
-                    )
-                )
-            }
-
-            if (!foundNext && prayersList.isNotEmpty()) {
-                val tomorrow = Calendar.getInstance()
-                tomorrow.add(Calendar.DAY_OF_MONTH, 1)
-                val tomorrowComponents = DateComponents(
-                    tomorrow.get(Calendar.YEAR),
-                    tomorrow.get(Calendar.MONTH) + 1,
-                    tomorrow.get(Calendar.DAY_OF_MONTH)
-                )
-                val tomorrowTimes = PrayerTimes(currentCoordinates, tomorrowComponents, params)
-                nextPrayerTime = tomorrowTimes.fajr
-                
-                prayersList[0] = prayersList[0].copy(
-                    isNext = true, 
-                    isPassed = false,
-                    timeLeft = "${getString(R.string.timer_prefix)} --:--:--"
-                )
-            }
+            prayersList[0] = prayersList[0].copy(
+                isNext = true,
+                isPassed = false,
+                timeLeft = "${getString(R.string.timer_prefix)} --:--:--"
+            )
         }
 
         val gregorianFormatter = SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
         val gregorianDate = gregorianFormatter.format(today.time)
-        
         val hijriDate = calculateHijriDate()
 
         _uiState.value = _uiState.value.copy(
@@ -216,9 +219,11 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private fun calculateHijriDate(): String {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val hijrahDate = HijrahDate.now()
-            "${hijrahDate.get(java.time.temporal.ChronoField.DAY_OF_MONTH)} ${getHijriMonthName(hijrahDate.get(java.time.temporal.ChronoField.MONTH_OF_YEAR))} ${hijrahDate.get(java.time.temporal.ChronoField.YEAR)}"
+            "${hijrahDate.get(java.time.temporal.ChronoField.DAY_OF_MONTH)} " +
+                "${getHijriMonthName(hijrahDate.get(java.time.temporal.ChronoField.MONTH_OF_YEAR))} " +
+                hijrahDate.get(java.time.temporal.ChronoField.YEAR)
         } else {
-            "15 ${getString(R.string.hijri_rajab)} 1448" // Fallback
+            "15 ${getString(R.string.hijri_rajab)} 1448"
         }
     }
 
@@ -249,10 +254,8 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
                 maybeReloadConfiguration()
                 updateCountdown(now)
-                
-                _uiState.value = _uiState.value.copy(
-                    currentTimeFormatted = currentTime
-                )
+
+                _uiState.value = _uiState.value.copy(currentTimeFormatted = currentTime)
                 delay(1000L)
             }
         }
@@ -264,7 +267,10 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         val lon = saved?.longitude?.toString() ?: currentCoordinates.longitude.toString()
         val methodCode = prefsManager.getCalculationMethod() ?: "MUSLIM_WORLD_LEAGUE"
         val madhabCode = prefsManager.getMadhab() ?: "HANAFI"
-        val signature = "$lat|$lon|$methodCode|$madhabCode"
+        val offsetSignature = SettingsViewModel.PRAYER_OFFSET_KEYS.joinToString("|") {
+            prefsManager.getPrayerOffset(it).toString()
+        }
+        val signature = "$lat|$lon|$methodCode|$madhabCode|$offsetSignature"
 
         if (!force && signature == lastConfigSignature) return
 
@@ -275,6 +281,10 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
         lastConfigSignature = signature
         calculatePrayerTimes()
+    }
+
+    private fun applyOffset(source: Date, offsetMinutes: Int): Date {
+        return Date(source.time + offsetMinutes * 60_000L)
     }
 
     private fun updateCountdown(now: Date) {
@@ -292,12 +302,17 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             diffMillis -= TimeUnit.MINUTES.toMillis(minutes)
             val seconds = TimeUnit.MILLISECONDS.toSeconds(diffMillis)
 
-            val formattedCountdown = String.format(Locale.getDefault(), "${getString(R.string.timer_prefix)} %02d:%02d:%02d", hours, minutes, seconds)
-            
-            val updatedPrayers = _uiState.value.prayerTimes.map { 
+            val formattedCountdown = String.format(
+                Locale.getDefault(),
+                "${getString(R.string.timer_prefix)} %02d:%02d:%02d",
+                hours,
+                minutes,
+                seconds
+            )
+
+            val updatedPrayers = _uiState.value.prayerTimes.map {
                 if (it.isNext) it.copy(timeLeft = formattedCountdown) else it
             }
-            
             _uiState.value = _uiState.value.copy(prayerTimes = updatedPrayers)
         }
     }

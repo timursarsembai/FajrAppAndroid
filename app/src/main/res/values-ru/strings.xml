@@ -16,6 +16,7 @@
     <string name="settings_location_updating">Обновляем локацию...</string>
     <string name="settings_method_default">Умм аль-Кура</string>
     <string name="settings_offset_default">0 минут</string>
+    <string name="settings_offset_custom">Пользовательское</string>
     <string name="settings_notifications_on">Включены</string>
     <string name="location_use_current">Использовать текущую локацию</string>
     <string name="location_hint">Можно использовать автоопределение, поиск города или координаты</string>
@@ -47,6 +48,8 @@
     <string name="calc_method_kuwait">Кувейт</string>
     <string name="calc_method_qatar">Катар</string>
     <string name="calc_method_singapore">Сингапур</string>
+    <string name="time_offset_hint">Настройте смещение каждого времени в минутах кнопками минус и плюс.</string>
+    <string name="time_offset_format">%1$+d мин</string>
     
     <!-- Common -->
     <string name="str_loading">Загрузка...</string>

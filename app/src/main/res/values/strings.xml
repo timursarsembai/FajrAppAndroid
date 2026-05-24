@@ -16,6 +16,7 @@
     <string name="settings_location_updating">Updating location...</string>
     <string name="settings_method_default">Umm Al-Qura</string>
     <string name="settings_offset_default">0 minutes</string>
+    <string name="settings_offset_custom">Custom</string>
     <string name="settings_notifications_on">On</string>
     <string name="location_use_current">Use current location</string>
     <string name="location_hint">You can use auto-detection, city search, or coordinates</string>
@@ -47,6 +48,8 @@
     <string name="calc_method_kuwait">Kuwait</string>
     <string name="calc_method_qatar">Qatar</string>
     <string name="calc_method_singapore">Singapore</string>
+    <string name="time_offset_hint">Adjust each prayer time in minutes. Use minus and plus buttons.</string>
+    <string name="time_offset_format">%1$+d min</string>
     
     <!-- Common -->
     <string name="str_loading">Loading...</string>

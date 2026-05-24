@@ -188,3 +188,26 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: реализовать экран "Смещение времени" по каждому намазу
+- Статус: выполнено
+- Что сделано:
+  - Добавлен отдельный экран `TimeOffsetScreen` со списком намазов и кнопками `+`/`-` для каждого пункта.
+  - Реализовано двустороннее смещение времени (в минутах) для каждого намаза с ограничением диапазона `-180..+180`.
+  - Смещения сохраняются в `SharedPreferences` и подгружаются при открытии приложения.
+  - Пункт `Смещение времени` в `Settings` показывает состояние: значение по умолчанию или пользовательские смещения.
+  - Расчет времен намаза в `PrayerViewModel` обновлен: применяются индивидуальные смещения перед отображением и расчетом следующего намаза.
+  - Добавлены локализованные строки EN/RU для новых подписей и форматирования смещений.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/TimeOffsetScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/SettingsScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/data/PreferencesManager.kt`
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство

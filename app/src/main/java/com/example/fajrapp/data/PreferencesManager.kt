@@ -19,6 +19,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_LANG = "app_language"
         private const val KEY_CALC_METHOD = "calc_method"
         private const val KEY_MADHAB = "madhab"
+        private const val KEY_OFFSET_PREFIX = "offset_"
     }
 
     fun saveLanguage(languageCode: String) {
@@ -43,6 +44,18 @@ class PreferencesManager(context: Context) {
 
     fun getMadhab(): String? {
         return prefs.getString(KEY_MADHAB, null)
+    }
+
+    fun savePrayerOffset(prayerKey: String, minutes: Int) {
+        prefs.edit().putInt(KEY_OFFSET_PREFIX + prayerKey, minutes).apply()
+    }
+
+    fun getPrayerOffset(prayerKey: String): Int {
+        return prefs.getInt(KEY_OFFSET_PREFIX + prayerKey, 0)
+    }
+
+    fun getPrayerOffsets(prayerKeys: List<String>): Map<String, Int> {
+        return prayerKeys.associateWith { getPrayerOffset(it) }
     }
 
     fun saveLocation(lat: Double, lon: Double, cityName: String) {

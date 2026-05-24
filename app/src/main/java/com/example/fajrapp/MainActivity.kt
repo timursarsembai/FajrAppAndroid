@@ -17,6 +17,7 @@ import com.example.fajrapp.viewmodel.SettingsViewModel
 import com.example.fajrapp.ui.LanguageSelectionScreen
 import com.example.fajrapp.ui.LocationScreen
 import com.example.fajrapp.ui.CalculationMethodScreen
+import com.example.fajrapp.ui.TimeOffsetScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -121,7 +122,8 @@ class MainActivity : ComponentActivity() {
                                     onBack = { navController.popBackStack() },
                                     onLanguageClick = { navController.navigate("languages") },
                                     onLocationClick = { navController.navigate("location") },
-                                    onCalculationMethodClick = { navController.navigate("calculation_method") }
+                                    onCalculationMethodClick = { navController.navigate("calculation_method") },
+                                    onTimeOffsetClick = { navController.navigate("time_offset") }
                                 )
                             }
                             
@@ -161,6 +163,20 @@ class MainActivity : ComponentActivity() {
                                 popExitTransition = { fadeOut(animationSpec = tween(50)) }
                             ) {
                                 CalculationMethodScreen(
+                                    viewModel = settingsViewModel,
+                                    hazeState = hazeState,
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(
+                                "time_offset",
+                                enterTransition = { fadeIn(animationSpec = tween(50)) },
+                                exitTransition = { fadeOut(animationSpec = tween(50)) },
+                                popEnterTransition = { fadeIn(animationSpec = tween(50)) },
+                                popExitTransition = { fadeOut(animationSpec = tween(50)) }
+                            ) {
+                                TimeOffsetScreen(
                                     viewModel = settingsViewModel,
                                     hazeState = hazeState,
                                     onBack = { navController.popBackStack() }

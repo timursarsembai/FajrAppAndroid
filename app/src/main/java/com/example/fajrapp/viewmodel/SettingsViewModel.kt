@@ -44,6 +44,11 @@ data class MadhabOption(
     val displayName: String
 )
 
+data class PrayerOffsetOption(
+    val key: String,
+    val displayName: String
+)
+
 data class SettingsUiState(
     val selectedLanguage: Language = Language("en", "English", "English", "🇺🇸"),
     val locationSubtitle: String = "",
@@ -56,11 +61,15 @@ data class SettingsUiState(
     val selectedCalculationMethodCode: String = DEFAULT_CALC_METHOD_CODE,
     val selectedMadhabCode: String = DEFAULT_MADHAB_CODE,
     val calculationMethodLabel: String = "",
-    val madhabLabel: String = ""
+    val madhabLabel: String = "",
+    val timeOffsets: Map<String, Int> = emptyMap(),
+    val timeOffsetLabel: String = ""
 )
 
 private const val DEFAULT_CALC_METHOD_CODE = "MUSLIM_WORLD_LEAGUE"
 private const val DEFAULT_MADHAB_CODE = "HANAFI"
+private const val OFFSET_MIN = -180
+private const val OFFSET_MAX = 180
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val prefsManager = PreferencesManager(application)
@@ -110,6 +119,17 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         )
     }
 
+    val prayerOffsetOptions by lazy {
+        listOf(
+            PrayerOffsetOption(OFFSET_FAJR, getString(R.string.prayer_fajr)),
+            PrayerOffsetOption(OFFSET_SUNRISE, getString(R.string.prayer_sunrise)),
+            PrayerOffsetOption(OFFSET_DHUHR, getString(R.string.prayer_dhuhr)),
+            PrayerOffsetOption(OFFSET_ASR, getString(R.string.prayer_asr)),
+            PrayerOffsetOption(OFFSET_MAGHRIB, getString(R.string.prayer_maghrib)),
+            PrayerOffsetOption(OFFSET_ISHA, getString(R.string.prayer_isha))
+        )
+    }
+
     init {
         loadSettings()
     }
@@ -120,6 +140,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         val savedLocation = prefsManager.getSavedLocation()
         val selectedCalcCode = sanitizeMethodCode(prefsManager.getCalculationMethod())
         val selectedMadhabCode = sanitizeMadhabCode(prefsManager.getMadhab())
+        val offsets = prefsManager.getPrayerOffsets(PRAYER_OFFSET_KEYS)
 
         _uiState.value = _uiState.value.copy(
             selectedLanguage = selectedLanguage,
@@ -129,7 +150,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             selectedCalculationMethodCode = selectedCalcCode,
             selectedMadhabCode = selectedMadhabCode,
             calculationMethodLabel = labelForMethod(selectedCalcCode),
-            madhabLabel = labelForMadhab(selectedMadhabCode)
+            madhabLabel = labelForMadhab(selectedMadhabCode),
+            timeOffsets = offsets,
+            timeOffsetLabel = buildTimeOffsetLabel(offsets)
         )
     }
 
@@ -276,6 +299,35 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             selectedMadhabCode = normalized,
             madhabLabel = labelForMadhab(normalized)
         )
+    }
+
+    fun getTimeOffset(prayerKey: String): Int {
+        return _uiState.value.timeOffsets[prayerKey] ?: 0
+    }
+
+    fun adjustTimeOffset(prayerKey: String, deltaMinutes: Int) {
+        if (prayerKey !in PRAYER_OFFSET_KEYS) return
+
+        val current = getTimeOffset(prayerKey)
+        val updated = (current + deltaMinutes).coerceIn(OFFSET_MIN, OFFSET_MAX)
+        prefsManager.savePrayerOffset(prayerKey, updated)
+
+        val newOffsets = _uiState.value.timeOffsets.toMutableMap().apply {
+            put(prayerKey, updated)
+        }
+        _uiState.value = _uiState.value.copy(
+            timeOffsets = newOffsets,
+            timeOffsetLabel = buildTimeOffsetLabel(newOffsets)
+        )
+    }
+
+    private fun buildTimeOffsetLabel(offsets: Map<String, Int>): String {
+        val hasCustomOffsets = PRAYER_OFFSET_KEYS.any { key -> (offsets[key] ?: 0) != 0 }
+        return if (hasCustomOffsets) {
+            getString(R.string.settings_offset_custom)
+        } else {
+            getString(R.string.settings_offset_default)
+        }
     }
 
     private suspend fun searchCitySuggestions(query: String): List<CitySuggestion> {
@@ -437,6 +489,21 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     companion object {
+        const val OFFSET_FAJR = "fajr"
+        const val OFFSET_SUNRISE = "sunrise"
+        const val OFFSET_DHUHR = "dhuhr"
+        const val OFFSET_ASR = "asr"
+        const val OFFSET_MAGHRIB = "maghrib"
+        const val OFFSET_ISHA = "isha"
+        val PRAYER_OFFSET_KEYS = listOf(
+            OFFSET_FAJR,
+            OFFSET_SUNRISE,
+            OFFSET_DHUHR,
+            OFFSET_ASR,
+            OFFSET_MAGHRIB,
+            OFFSET_ISHA
+        )
+
         fun toCalculationMethod(code: String?): CalculationMethod {
             return when (code) {
                 "EGYPTIAN" -> CalculationMethod.EGYPTIAN

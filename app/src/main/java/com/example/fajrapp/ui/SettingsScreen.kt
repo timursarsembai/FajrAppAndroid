@@ -49,7 +49,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onLanguageClick: () -> Unit,
     onLocationClick: () -> Unit,
-    onCalculationMethodClick: () -> Unit
+    onCalculationMethodClick: () -> Unit,
+    onTimeOffsetClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -131,8 +132,9 @@ fun SettingsScreen(
             SettingsItem(
                 icon = Icons.Default.Schedule,
                 title = stringResource(R.string.settings_time_offset),
-                subtitle = stringResource(R.string.settings_offset_default),
-                hazeState = hazeState
+                subtitle = uiState.timeOffsetLabel,
+                hazeState = hazeState,
+                onClick = onTimeOffsetClick
             )
             SettingsItem(
                 icon = Icons.Default.Notifications,
