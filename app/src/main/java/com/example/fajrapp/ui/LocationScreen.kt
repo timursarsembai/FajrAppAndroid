@@ -22,8 +22,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -164,27 +162,40 @@ fun LocationScreen(
             )
 
             val showSuggestions = cityQuery.trim().length >= 2 && (uiState.citySuggestions.isNotEmpty() || uiState.isSearchingCities)
-            DropdownMenu(
-                expanded = cityMenuExpanded && showSuggestions,
-                onDismissRequest = { cityMenuExpanded = false },
-                modifier = Modifier.fillMaxWidth(0.95f)
-            ) {
-                if (uiState.isSearchingCities) {
-                    DropdownMenuItem(
-                        text = { Text(text = stringResource(R.string.location_searching), color = Color.White) },
-                        onClick = {},
-                        enabled = false
-                    )
-                } else {
-                    uiState.citySuggestions.forEach { suggestion ->
-                        DropdownMenuItem(
-                            text = { Text(text = suggestion.displayName, color = Color.White) },
-                            onClick = {
-                                cityQuery = suggestion.displayName
-                                cityMenuExpanded = false
-                                viewModel.selectCitySuggestion(suggestion)
+            if (cityMenuExpanded && showSuggestions) {
+                GlassContainer(
+                    cornerRadius = 14.dp,
+                    hazeState = hazeState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 60.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        if (uiState.isSearchingCities) {
+                            Text(
+                                text = stringResource(R.string.location_searching),
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
+                            )
+                        } else {
+                            uiState.citySuggestions.forEach { suggestion ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            cityQuery = suggestion.displayName
+                                            cityMenuExpanded = false
+                                            viewModel.selectCitySuggestion(suggestion)
+                                        }
+                                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                                ) {
+                                    Text(
+                                        text = suggestion.displayName,
+                                        color = Color.White
+                                    )
+                                }
                             }
-                        )
+                        }
                     }
                 }
             }

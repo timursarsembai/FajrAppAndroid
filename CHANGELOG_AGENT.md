@@ -161,3 +161,16 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: исправить вылет при вводе второго символа в поиске города
+- Статус: выполнено
+- Что сделано:
+  - Убран popup `DropdownMenu` для подсказок городов.
+  - Реализован встроенный под полем "dropdown-like" список подсказок в стеклянном контейнере.
+  - Сохранена логика автопоиска и выбора города из списка.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/LocationScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство
