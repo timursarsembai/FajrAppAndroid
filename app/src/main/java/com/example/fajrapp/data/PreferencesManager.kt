@@ -1,0 +1,57 @@
+package com.example.fajrapp.data
+
+import android.content.Context
+import android.content.SharedPreferences
+
+data class SavedLocation(
+    val latitude: Double,
+    val longitude: Double,
+    val cityName: String
+)
+
+class PreferencesManager(context: Context) {
+    private val prefs: SharedPreferences = context.getSharedPreferences("fajr_prefs", Context.MODE_PRIVATE)
+
+    companion object {
+        private const val KEY_LAT = "latitude"
+        private const val KEY_LON = "longitude"
+        private const val KEY_CITY = "city_name"
+        private const val KEY_LANG = "app_language"
+    }
+
+    fun saveLanguage(languageCode: String) {
+        prefs.edit().putString(KEY_LANG, languageCode).apply()
+    }
+
+    fun getLanguage(): String? {
+        return prefs.getString(KEY_LANG, null)
+    }
+
+    fun saveLocation(lat: Double, lon: Double, cityName: String) {
+        prefs.edit().apply {
+            putString(KEY_LAT, lat.toString())
+            putString(KEY_LON, lon.toString())
+            putString(KEY_CITY, cityName)
+            apply()
+        }
+    }
+
+    fun getSavedLocation(): SavedLocation? {
+        val latStr = prefs.getString(KEY_LAT, null)
+        val lonStr = prefs.getString(KEY_LON, null)
+        val city = prefs.getString(KEY_CITY, null)
+
+        if (latStr != null && lonStr != null && city != null) {
+            return try {
+                SavedLocation(
+                    latitude = latStr.toDouble(),
+                    longitude = lonStr.toDouble(),
+                    cityName = city
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }
+        return null
+    }
+}

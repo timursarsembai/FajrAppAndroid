@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FajrApp</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_language">Язык приложения</string>
+    <string name="settings_location">Местоположение</string>
+    <string name="settings_calculation_method">Метод расчета</string>
+    <string name="settings_time_offset">Смещение времени</string>
+    <string name="settings_notifications">Уведомления</string>
+    <string name="settings_version_prefix">Версия</string>
+    
+    <!-- Settings Subtitles -->
+    <string name="settings_location_unknown">Неизвестно</string>
+    <string name="settings_method_default">Умм аль-Кура</string>
+    <string name="settings_offset_default">0 минут</string>
+    <string name="settings_notifications_on">Включены</string>
+    
+    <!-- Common -->
+    <string name="str_loading">Загрузка...</string>
+    <string name="footer_dua">Да примет Аллах ваши молитвы</string>
+    <string name="timer_prefix">через</string>
+    
+    <!-- Prayer Names -->
+    <string name="prayer_fajr">Фаджр</string>
+    <string name="prayer_sunrise">Восход</string>
+    <string name="prayer_dhuhr">Зухр</string>
+    <string name="prayer_asr">Аср</string>
+    <string name="prayer_maghrib">Магриб</string>
+    <string name="prayer_isha">Иша</string>
+    
+    <!-- Hijri Months -->
+    <string name="hijri_muharram">Мухаррам</string>
+    <string name="hijri_safar">Сафар</string>
+    <string name="hijri_rabi_al_awwal">Раби аль-авваль</string>
+    <string name="hijri_rabi_al_athani">Раби аль-ахир</string>
+    <string name="hijri_jumada_al_ula">Джумада аль-уля</string>
+    <string name="hijri_jumada_al_akhirah">Джумада аль-ахира</string>
+    <string name="hijri_rajab">Раджаб</string>
+    <string name="hijri_shaban">Шаабан</string>
+    <string name="hijri_ramadan">Рамадан</string>
+    <string name="hijri_shawwal">Шавваль</string>
+    <string name="hijri_dhu_al_qadah">Зуль-Када</string>
+    <string name="hijri_dhu_al_hijjah">Зуль-Хиджа</string>
+</resources>

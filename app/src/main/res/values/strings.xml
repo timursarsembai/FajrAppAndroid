@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FajrApp</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">App Language</string>
+    <string name="settings_location">Location</string>
+    <string name="settings_calculation_method">Calculation Method</string>
+    <string name="settings_time_offset">Time Offset</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_version_prefix">Version</string>
+    
+    <!-- Settings Subtitles -->
+    <string name="settings_location_unknown">Unknown</string>
+    <string name="settings_method_default">Umm Al-Qura</string>
+    <string name="settings_offset_default">0 minutes</string>
+    <string name="settings_notifications_on">On</string>
+    
+    <!-- Common -->
+    <string name="str_loading">Loading...</string>
+    <string name="footer_dua">May Allah accept your prayers</string>
+    <string name="timer_prefix">in</string>
+    
+    <!-- Prayer Names -->
+    <string name="prayer_fajr">Fajr</string>
+    <string name="prayer_sunrise">Sunrise</string>
+    <string name="prayer_dhuhr">Dhuhr</string>
+    <string name="prayer_asr">Asr</string>
+    <string name="prayer_maghrib">Maghrib</string>
+    <string name="prayer_isha">Isha</string>
+    
+    <!-- Hijri Months -->
+    <string name="hijri_muharram">Muharram</string>
+    <string name="hijri_safar">Safar</string>
+    <string name="hijri_rabi_al_awwal">Rabi\' al-awwal</string>
+    <string name="hijri_rabi_al_athani">Rabi\' al-thani</string>
+    <string name="hijri_jumada_al_ula">Jumada al-awwal</string>
+    <string name="hijri_jumada_al_akhirah">Jumada al-thani</string>
+    <string name="hijri_rajab">Rajab</string>
+    <string name="hijri_shaban">Sha\'ban</string>
+    <string name="hijri_ramadan">Ramadan</string>
+    <string name="hijri_shawwal">Shawwal</string>
+    <string name="hijri_dhu_al_qadah">Dhu al-Qi\'dah</string>
+    <string name="hijri_dhu_al_hijjah">Dhu al-Hijjah</string>
+</resources>

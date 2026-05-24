@@ -1,0 +1,23 @@
+# Gradle / build
+.gradle/
+build/
+**/build/
+
+# Local config
+local.properties
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS / logs
+*.log
+
+# Java/Kotlin crash dumps
+*.hprof
+
+# Keystore / secrets
+*.jks
+*.keystore
+
