@@ -47,6 +47,7 @@ fun CalculationMethodScreen(
     val uiState by viewModel.uiState.collectAsState()
     var methodExpanded by remember { mutableStateOf(false) }
     var madhabExpanded by remember { mutableStateOf(false) }
+    var dstExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -143,6 +144,34 @@ fun CalculationMethodScreen(
                     onClick = {
                         madhabExpanded = false
                         viewModel.setMadhab(option.code)
+                    }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.size(18.dp))
+
+        Text(
+            text = stringResource(R.string.calc_dst_label),
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        )
+
+        GlassDropdownField(
+            value = uiState.dstModeLabel,
+            expanded = dstExpanded,
+            onExpandedChange = { dstExpanded = it },
+            hazeState = hazeState
+        ) {
+            viewModel.dstModeOptions.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(text = option.displayName) },
+                    onClick = {
+                        dstExpanded = false
+                        viewModel.setDstMode(option.code)
                     }
                 )
             }

@@ -211,3 +211,29 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: добавить режим "Переход на летнее время" в метод расчета
+- Статус: выполнено
+- Что сделано:
+  - В экран `Метод расчета` добавлен новый пункт `Переход на летнее время` с 3 вариантами:
+    - `Авто (по региону)`
+    - `-1 час`
+    - `+1 час`
+  - Режим сохраняется в `SharedPreferences` и загружается при старте приложения.
+  - В `PrayerViewModel` добавлено применение DST-смещения к расчету всех времен намаза.
+  - Для `Авто` реализовано определение DST по региону выбранной локации:
+    - определяется страна из сохраненной локации,
+    - подбирается соответствующая таймзона региона,
+    - проверяется, действует ли DST на текущую дату по системным timezone-правилам Android (tzdb).
+  - Добавлены новые строковые ресурсы EN/RU для пункта DST.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/CalculationMethodScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/data/PreferencesManager.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство

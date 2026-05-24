@@ -44,6 +44,11 @@ data class MadhabOption(
     val displayName: String
 )
 
+data class DstModeOption(
+    val code: String,
+    val displayName: String
+)
+
 data class PrayerOffsetOption(
     val key: String,
     val displayName: String
@@ -60,14 +65,17 @@ data class SettingsUiState(
     val isSearchingCities: Boolean = false,
     val selectedCalculationMethodCode: String = DEFAULT_CALC_METHOD_CODE,
     val selectedMadhabCode: String = DEFAULT_MADHAB_CODE,
+    val selectedDstModeCode: String = DEFAULT_DST_MODE_CODE,
     val calculationMethodLabel: String = "",
     val madhabLabel: String = "",
+    val dstModeLabel: String = "",
     val timeOffsets: Map<String, Int> = emptyMap(),
     val timeOffsetLabel: String = ""
 )
 
 private const val DEFAULT_CALC_METHOD_CODE = "MUSLIM_WORLD_LEAGUE"
 private const val DEFAULT_MADHAB_CODE = "HANAFI"
+private const val DEFAULT_DST_MODE_CODE = "AUTO"
 private const val OFFSET_MIN = -180
 private const val OFFSET_MAX = 180
 
@@ -119,6 +127,14 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         )
     }
 
+    val dstModeOptions by lazy {
+        listOf(
+            DstModeOption(DST_MODE_AUTO, getString(R.string.calc_dst_auto)),
+            DstModeOption(DST_MODE_MINUS_ONE_HOUR, getString(R.string.calc_dst_minus_one)),
+            DstModeOption(DST_MODE_PLUS_ONE_HOUR, getString(R.string.calc_dst_plus_one))
+        )
+    }
+
     val prayerOffsetOptions by lazy {
         listOf(
             PrayerOffsetOption(OFFSET_FAJR, getString(R.string.prayer_fajr)),
@@ -140,6 +156,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         val savedLocation = prefsManager.getSavedLocation()
         val selectedCalcCode = sanitizeMethodCode(prefsManager.getCalculationMethod())
         val selectedMadhabCode = sanitizeMadhabCode(prefsManager.getMadhab())
+        val selectedDstCode = normalizeDstModeCode(prefsManager.getDstMode())
         val offsets = prefsManager.getPrayerOffsets(PRAYER_OFFSET_KEYS)
 
         _uiState.value = _uiState.value.copy(
@@ -149,8 +166,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             locationLongitude = savedLocation?.longitude?.let(::formatCoordinate) ?: "",
             selectedCalculationMethodCode = selectedCalcCode,
             selectedMadhabCode = selectedMadhabCode,
+            selectedDstModeCode = selectedDstCode,
             calculationMethodLabel = labelForMethod(selectedCalcCode),
             madhabLabel = labelForMadhab(selectedMadhabCode),
+            dstModeLabel = labelForDstMode(selectedDstCode),
             timeOffsets = offsets,
             timeOffsetLabel = buildTimeOffsetLabel(offsets)
         )
@@ -298,6 +317,15 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         _uiState.value = _uiState.value.copy(
             selectedMadhabCode = normalized,
             madhabLabel = labelForMadhab(normalized)
+        )
+    }
+
+    fun setDstMode(code: String) {
+        val normalized = normalizeDstModeCode(code)
+        prefsManager.saveDstMode(normalized)
+        _uiState.value = _uiState.value.copy(
+            selectedDstModeCode = normalized,
+            dstModeLabel = labelForDstMode(normalized)
         )
     }
 
@@ -484,11 +512,23 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         return madhabOptions.find { it.code == code }?.displayName ?: getString(R.string.calc_asr_hanafi)
     }
 
+    private fun labelForDstMode(code: String): String {
+        return dstModeOptions.find { it.code == code }?.displayName ?: getString(R.string.calc_dst_auto)
+    }
+
+    private fun normalizeDstModeCode(code: String?): String {
+        return normalizeDstMode(code, DEFAULT_DST_MODE_CODE)
+    }
+
     private fun getString(resId: Int): String {
         return getApplication<Application>().getString(resId)
     }
 
     companion object {
+        const val DST_MODE_AUTO = "AUTO"
+        const val DST_MODE_MINUS_ONE_HOUR = "MINUS_ONE_HOUR"
+        const val DST_MODE_PLUS_ONE_HOUR = "PLUS_ONE_HOUR"
+
         const val OFFSET_FAJR = "fajr"
         const val OFFSET_SUNRISE = "sunrise"
         const val OFFSET_DHUHR = "dhuhr"
@@ -521,6 +561,15 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
         fun toMadhab(code: String?): Madhab {
             return if (code == "SHAFI") Madhab.SHAFI else Madhab.HANAFI
+        }
+
+        fun normalizeDstMode(code: String?, fallback: String = DST_MODE_AUTO): String {
+            return when (code) {
+                DST_MODE_AUTO,
+                DST_MODE_MINUS_ONE_HOUR,
+                DST_MODE_PLUS_ONE_HOUR -> code
+                else -> fallback
+            }
         }
     }
 }

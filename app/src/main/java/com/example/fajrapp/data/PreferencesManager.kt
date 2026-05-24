@@ -19,6 +19,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_LANG = "app_language"
         private const val KEY_CALC_METHOD = "calc_method"
         private const val KEY_MADHAB = "madhab"
+        private const val KEY_DST_MODE = "dst_mode"
         private const val KEY_OFFSET_PREFIX = "offset_"
     }
 
@@ -44,6 +45,14 @@ class PreferencesManager(context: Context) {
 
     fun getMadhab(): String? {
         return prefs.getString(KEY_MADHAB, null)
+    }
+
+    fun saveDstMode(modeCode: String) {
+        prefs.edit().putString(KEY_DST_MODE, modeCode).apply()
+    }
+
+    fun getDstMode(): String? {
+        return prefs.getString(KEY_DST_MODE, null)
     }
 
     fun savePrayerOffset(prayerKey: String, minutes: Int) {

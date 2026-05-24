@@ -36,6 +36,10 @@
     <string name="location_error_out_of_range">Широта или долгота вне допустимого диапазона</string>
     <string name="calc_method_label">Метод расчета</string>
     <string name="calc_asr_label">Расчет Асра</string>
+    <string name="calc_dst_label">Переход на летнее время</string>
+    <string name="calc_dst_auto">Авто (по региону)</string>
+    <string name="calc_dst_minus_one">-1 час</string>
+    <string name="calc_dst_plus_one">+1 час</string>
     <string name="calc_asr_shafi">Стандартный (Шафии, Малики, Ханбали)</string>
     <string name="calc_asr_hanafi">Ханафи</string>
     <string name="calc_method_mwl">Всемирная мусульманская лига</string>

@@ -1,6 +1,7 @@
 package com.example.fajrapp.viewmodel
 
 import android.app.Application
+import android.icu.util.TimeZone as IcuTimeZone
 import android.location.Geocoder
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
@@ -22,7 +23,9 @@ import java.time.chrono.HijrahDate
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 data class PrayerUiState(
     val prayerTimes: List<PrayerData> = emptyList(),
@@ -48,6 +51,8 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val prefsManager = PreferencesManager(application)
     private var nextPrayerTime: Date? = null
     private var lastConfigSignature: String? = null
+    private var cachedRegionTimeZone: TimeZone? = null
+    private var cachedRegionTimeZoneKey: String? = null
 
     // Default coordinates (Almaty, Kazakhstan)
     private var currentCoordinates = Coordinates(43.238949, 76.945465)
@@ -146,6 +151,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         params.madhab = madhab
 
         val offsets = prefsManager.getPrayerOffsets(SettingsViewModel.PRAYER_OFFSET_KEYS)
+        val dstShiftMinutes = getConfiguredDstShiftMinutes(Date())
         val prayerTimes = PrayerTimes(currentCoordinates, dateComponents, params)
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         val now = Date()
@@ -158,7 +164,8 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             PrayerEntry(SettingsViewModel.OFFSET_MAGHRIB, getString(R.string.prayer_maghrib), "المغرب", prayerTimes.maghrib),
             PrayerEntry(SettingsViewModel.OFFSET_ISHA, getString(R.string.prayer_isha), "العشاء", prayerTimes.isha)
         ).map { entry ->
-            entry.copy(time = applyOffset(entry.time, offsets[entry.offsetKey] ?: 0))
+            val prayerOffset = offsets[entry.offsetKey] ?: 0
+            entry.copy(time = applyOffset(entry.time, prayerOffset + dstShiftMinutes))
         }
 
         val prayersList = mutableListOf<PrayerData>()
@@ -194,7 +201,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             val tomorrowTimes = PrayerTimes(currentCoordinates, tomorrowComponents, params)
             nextPrayerTime = applyOffset(
                 tomorrowTimes.fajr,
-                offsets[SettingsViewModel.OFFSET_FAJR] ?: 0
+                (offsets[SettingsViewModel.OFFSET_FAJR] ?: 0) + dstShiftMinutes
             )
 
             prayersList[0] = prayersList[0].copy(
@@ -267,10 +274,12 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         val lon = saved?.longitude?.toString() ?: currentCoordinates.longitude.toString()
         val methodCode = prefsManager.getCalculationMethod() ?: "MUSLIM_WORLD_LEAGUE"
         val madhabCode = prefsManager.getMadhab() ?: "HANAFI"
+        val dstModeCode = SettingsViewModel.normalizeDstMode(prefsManager.getDstMode())
+        val dstShift = getConfiguredDstShiftMinutes(Date())
         val offsetSignature = SettingsViewModel.PRAYER_OFFSET_KEYS.joinToString("|") {
             prefsManager.getPrayerOffset(it).toString()
         }
-        val signature = "$lat|$lon|$methodCode|$madhabCode|$offsetSignature"
+        val signature = "$lat|$lon|$methodCode|$madhabCode|$dstModeCode|$dstShift|$offsetSignature"
 
         if (!force && signature == lastConfigSignature) return
 
@@ -285,6 +294,114 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun applyOffset(source: Date, offsetMinutes: Int): Date {
         return Date(source.time + offsetMinutes * 60_000L)
+    }
+
+    private fun getConfiguredDstShiftMinutes(now: Date): Int {
+        return when (SettingsViewModel.normalizeDstMode(prefsManager.getDstMode())) {
+            SettingsViewModel.DST_MODE_MINUS_ONE_HOUR -> -60
+            SettingsViewModel.DST_MODE_PLUS_ONE_HOUR -> 60
+            else -> getAutoDstShiftMinutes(now)
+        }
+    }
+
+    private fun getAutoDstShiftMinutes(now: Date): Int {
+        val timeZone = resolveRegionTimeZone() ?: return 0
+        return if (timeZone.useDaylightTime() && timeZone.inDaylightTime(now)) 60 else 0
+    }
+
+    private fun resolveRegionTimeZone(): TimeZone? {
+        val saved = prefsManager.getSavedLocation()
+        val locationKey = buildLocationKeyForTimeZone(saved)
+        if (cachedRegionTimeZone != null && cachedRegionTimeZoneKey == locationKey) {
+            return cachedRegionTimeZone
+        }
+
+        val countryCode = resolveCountryCode(saved?.cityName)
+        val candidateIds = getTimeZoneCandidates(countryCode)
+        val timeZoneId = selectBestTimeZoneId(
+            candidateIds = candidateIds,
+            cityLabel = saved?.cityName.orEmpty(),
+            longitude = saved?.longitude ?: currentCoordinates.longitude
+        ) ?: TimeZone.getDefault().id
+
+        return TimeZone.getTimeZone(timeZoneId).also {
+            cachedRegionTimeZone = it
+            cachedRegionTimeZoneKey = locationKey
+        }
+    }
+
+    private fun buildLocationKeyForTimeZone(saved: com.example.fajrapp.data.SavedLocation?): String {
+        return if (saved == null) {
+            "${currentCoordinates.latitude}|${currentCoordinates.longitude}|${_uiState.value.locationName}"
+        } else {
+            "${saved.latitude}|${saved.longitude}|${saved.cityName}"
+        }
+    }
+
+    private fun resolveCountryCode(cityLabel: String?): String? {
+        if (cityLabel.isNullOrBlank()) return null
+        val countryPart = cityLabel.substringAfterLast(',', "").trim()
+        if (countryPart.isBlank()) return null
+
+        if (countryPart.length == 2 && countryPart.all { it.isLetter() }) {
+            return countryPart.uppercase(Locale.US)
+        }
+
+        val normalizedCountry = normalizeToken(countryPart)
+        if (normalizedCountry.isEmpty()) return null
+
+        val localesToTry = listOf(Locale.getDefault(), Locale.ENGLISH, Locale("ru"), Locale("kk"))
+        for (iso in Locale.getISOCountries()) {
+            for (locale in localesToTry) {
+                val displayCountry = Locale("", iso).getDisplayCountry(locale)
+                if (normalizeToken(displayCountry) == normalizedCountry) {
+                    return iso
+                }
+            }
+        }
+        return null
+    }
+
+    private fun getTimeZoneCandidates(countryCode: String?): List<String> {
+        if (countryCode.isNullOrBlank()) return emptyList()
+        return try {
+            IcuTimeZone.getAvailableIDs(countryCode).toList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun selectBestTimeZoneId(
+        candidateIds: List<String>,
+        cityLabel: String,
+        longitude: Double
+    ): String? {
+        if (candidateIds.isEmpty()) return null
+        if (candidateIds.size == 1) return candidateIds.first()
+
+        val normalizedCity = normalizeToken(cityLabel.substringBefore(',').trim())
+        if (normalizedCity.isNotEmpty()) {
+            candidateIds.firstOrNull { id ->
+                val zoneCity = id.substringAfter('/').substringAfterLast('/').replace('_', ' ')
+                val normalizedZoneCity = normalizeToken(zoneCity)
+                normalizedZoneCity.contains(normalizedCity) || normalizedCity.contains(normalizedZoneCity)
+            }?.let { return it }
+        }
+
+        return candidateIds.minByOrNull { id ->
+            val zone = TimeZone.getTimeZone(id)
+            val meridian = (zone.rawOffset / 3_600_000.0) * 15.0
+            longitudeDistanceDegrees(longitude, meridian)
+        }
+    }
+
+    private fun longitudeDistanceDegrees(a: Double, b: Double): Double {
+        val diff = abs(a - b)
+        return minOf(diff, 360.0 - diff)
+    }
+
+    private fun normalizeToken(value: String): String {
+        return value.lowercase(Locale.ROOT).replace(Regex("[^\\p{L}\\p{Nd}]"), "")
     }
 
     private fun updateCountdown(now: Date) {

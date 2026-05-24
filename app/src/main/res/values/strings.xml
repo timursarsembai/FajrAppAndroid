@@ -36,6 +36,10 @@
     <string name="location_error_out_of_range">Latitude or longitude out of range</string>
     <string name="calc_method_label">Calculation method</string>
     <string name="calc_asr_label">Asr calculation</string>
+    <string name="calc_dst_label">Daylight saving time</string>
+    <string name="calc_dst_auto">Auto (by region)</string>
+    <string name="calc_dst_minus_one">-1 hour</string>
+    <string name="calc_dst_plus_one">+1 hour</string>
     <string name="calc_asr_shafi">Standard (Shafi, Maliki, Hanbali)</string>
     <string name="calc_asr_hanafi">Hanafi</string>
     <string name="calc_method_mwl">Muslim World League</string>
