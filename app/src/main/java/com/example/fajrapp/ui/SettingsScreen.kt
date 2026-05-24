@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -49,8 +48,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onLanguageClick: () -> Unit,
     onLocationClick: () -> Unit,
-    onCalculationMethodClick: () -> Unit,
-    onTimeOffsetClick: () -> Unit
+    onCalculationMethodClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -128,13 +126,6 @@ fun SettingsScreen(
                 subtitle = uiState.calculationMethodLabel,
                 hazeState = hazeState,
                 onClick = onCalculationMethodClick
-            )
-            SettingsItem(
-                icon = Icons.Default.Schedule,
-                title = stringResource(R.string.settings_time_offset),
-                subtitle = uiState.timeOffsetLabel,
-                hazeState = hazeState,
-                onClick = onTimeOffsetClick
             )
             SettingsItem(
                 icon = Icons.Default.Notifications,

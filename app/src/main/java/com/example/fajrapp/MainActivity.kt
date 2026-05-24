@@ -122,8 +122,7 @@ class MainActivity : ComponentActivity() {
                                     onBack = { navController.popBackStack() },
                                     onLanguageClick = { navController.navigate("languages") },
                                     onLocationClick = { navController.navigate("location") },
-                                    onCalculationMethodClick = { navController.navigate("calculation_method") },
-                                    onTimeOffsetClick = { navController.navigate("time_offset") }
+                                    onCalculationMethodClick = { navController.navigate("calculation_method") }
                                 )
                             }
                             
@@ -165,7 +164,8 @@ class MainActivity : ComponentActivity() {
                                 CalculationMethodScreen(
                                     viewModel = settingsViewModel,
                                     hazeState = hazeState,
-                                    onBack = { navController.popBackStack() }
+                                    onBack = { navController.popBackStack() },
+                                    onTimeOffsetClick = { navController.navigate("time_offset") }
                                 )
                             }
 

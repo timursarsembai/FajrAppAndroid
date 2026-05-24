@@ -54,6 +54,8 @@
     <string name="calc_method_singapore">Singapore</string>
     <string name="time_offset_hint">Adjust each prayer time in minutes. Use minus and plus buttons.</string>
     <string name="time_offset_format">%1$+d min</string>
+    <string name="lesson_wudu">Ablution lessons</string>
+    <string name="lesson_prayer_format">Lessons of %1$s prayer</string>
     
     <!-- Common -->
     <string name="str_loading">Loading...</string>
@@ -62,11 +64,12 @@
     
     <!-- Prayer Names -->
     <string name="prayer_fajr">Fajr</string>
-    <string name="prayer_sunrise">Sunrise</string>
+    <string name="prayer_sunrise">Duha</string>
     <string name="prayer_dhuhr">Dhuhr</string>
     <string name="prayer_asr">Asr</string>
     <string name="prayer_maghrib">Maghrib</string>
     <string name="prayer_isha">Isha</string>
+    <string name="prayer_tahajjud">Tahajjud</string>
     
     <!-- Hijri Months -->
     <string name="hijri_muharram">Muharram</string>

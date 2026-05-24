@@ -1,84 +1,82 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">FajrApp</string>
-    
-    <!-- Settings -->
-    <string name="settings_title">Настройки</string>
-    <string name="settings_language">Язык приложения</string>
-    <string name="settings_location">Местоположение</string>
-    <string name="settings_calculation_method">Метод расчета</string>
-    <string name="settings_time_offset">Смещение времени</string>
-    <string name="settings_notifications">Уведомления</string>
-    <string name="settings_version_prefix">Версия</string>
-    
-    <!-- Settings Subtitles -->
-    <string name="settings_location_unknown">Неизвестно</string>
-    <string name="settings_location_updating">Обновляем локацию...</string>
-    <string name="settings_method_default">Умм аль-Кура</string>
-    <string name="settings_offset_default">0 минут</string>
-    <string name="settings_offset_custom">Пользовательское</string>
-    <string name="settings_notifications_on">Включены</string>
-    <string name="location_use_current">Использовать текущую локацию</string>
-    <string name="location_hint">Можно использовать автоопределение, поиск города или координаты</string>
-    <string name="location_city_title">Город</string>
-    <string name="location_city_input_label">Название города</string>
-    <string name="location_city_find_button">Найти город</string>
-    <string name="location_searching">Поиск...</string>
-    <string name="location_coordinates_title">Координаты</string>
-    <string name="location_latitude_label">Широта</string>
-    <string name="location_longitude_label">Долгота</string>
-    <string name="location_coordinates_save_button">Сохранить по координатам</string>
-    <string name="location_saved_success">Локация сохранена</string>
-    <string name="location_error_device">Не удалось получить текущую локацию</string>
-    <string name="location_error_empty_city">Введите название города</string>
-    <string name="location_error_city_not_found">Город не найден</string>
-    <string name="location_error_invalid_coordinates">Некорректный формат координат</string>
-    <string name="location_error_out_of_range">Широта или долгота вне допустимого диапазона</string>
-    <string name="calc_method_label">Метод расчета</string>
-    <string name="calc_asr_label">Расчет Асра</string>
-    <string name="calc_dst_label">Переход на летнее время</string>
-    <string name="calc_dst_auto">Авто (по региону)</string>
-    <string name="calc_dst_minus_one">-1 час</string>
-    <string name="calc_dst_plus_one">+1 час</string>
-    <string name="calc_asr_shafi">Стандартный (Шафии, Малики, Ханбали)</string>
-    <string name="calc_asr_hanafi">Ханафи</string>
-    <string name="calc_method_mwl">Всемирная мусульманская лига</string>
-    <string name="calc_method_isna">ISNA (Северная Америка)</string>
-    <string name="calc_method_egyptian">Египетское управление</string>
-    <string name="calc_method_karachi">Карачи</string>
-    <string name="calc_method_umm_al_qura">Умм аль-Кура</string>
-    <string name="calc_method_dubai">Дубай</string>
-    <string name="calc_method_moonsighting">Комитет наблюдения луны</string>
-    <string name="calc_method_kuwait">Кувейт</string>
-    <string name="calc_method_qatar">Катар</string>
-    <string name="calc_method_singapore">Сингапур</string>
-    <string name="time_offset_hint">Настройте смещение каждого времени в минутах кнопками минус и плюс.</string>
-    <string name="time_offset_format">%1$+d мин</string>
-    
-    <!-- Common -->
-    <string name="str_loading">Загрузка...</string>
-    <string name="footer_dua">Да примет Аллах ваши молитвы</string>
-    <string name="timer_prefix">через</string>
-    
-    <!-- Prayer Names -->
-    <string name="prayer_fajr">Фаджр</string>
-    <string name="prayer_sunrise">Восход</string>
-    <string name="prayer_dhuhr">Зухр</string>
-    <string name="prayer_asr">Аср</string>
-    <string name="prayer_maghrib">Магриб</string>
-    <string name="prayer_isha">Иша</string>
-    
-    <!-- Hijri Months -->
-    <string name="hijri_muharram">Мухаррам</string>
-    <string name="hijri_safar">Сафар</string>
-    <string name="hijri_rabi_al_awwal">Раби аль-авваль</string>
-    <string name="hijri_rabi_al_athani">Раби аль-ахир</string>
-    <string name="hijri_jumada_al_ula">Джумада аль-уля</string>
-    <string name="hijri_jumada_al_akhirah">Джумада аль-ахира</string>
-    <string name="hijri_rajab">Раджаб</string>
-    <string name="hijri_shaban">Шаабан</string>
-    <string name="hijri_ramadan">Рамадан</string>
-    <string name="hijri_shawwal">Шавваль</string>
-    <string name="hijri_dhu_al_qadah">Зуль-Када</string>
-    <string name="hijri_dhu_al_hijjah">Зуль-Хиджа</string>
+  <string name="app_name">FajrApp</string>
+  <!-- Settings -->
+  <string name="settings_title">РќР°СЃС‚СЂРѕР№РєРё</string>
+  <string name="settings_language">РЇР·С‹Рє РїСЂРёР»РѕР¶РµРЅРёСЏ</string>
+  <string name="settings_location">РњРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРµ</string>
+  <string name="settings_calculation_method">РњРµС‚РѕРґ СЂР°СЃС‡РµС‚Р°</string>
+  <string name="settings_time_offset">РЎРјРµС‰РµРЅРёРµ РІСЂРµРјРµРЅРё</string>
+  <string name="settings_notifications">РЈРІРµРґРѕРјР»РµРЅРёСЏ</string>
+  <string name="settings_version_prefix">Р’РµСЂСЃРёСЏ</string>
+  <!-- Settings Subtitles -->
+  <string name="settings_location_unknown">РќРµРёР·РІРµСЃС‚РЅРѕ</string>
+  <string name="settings_location_updating">РћР±РЅРѕРІР»СЏРµРј Р»РѕРєР°С†РёСЋ...</string>
+  <string name="settings_method_default">РЈРјРј Р°Р»СЊ-РљСѓСЂР°</string>
+  <string name="settings_offset_default">0 РјРёРЅСѓС‚</string>
+  <string name="settings_offset_custom">РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРµ</string>
+  <string name="settings_notifications_on">Р’РєР»СЋС‡РµРЅС‹</string>
+  <string name="location_use_current">РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ С‚РµРєСѓС‰СѓСЋ Р»РѕРєР°С†РёСЋ</string>
+  <string name="location_hint">РњРѕР¶РЅРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р°РІС‚РѕРѕРїСЂРµРґРµР»РµРЅРёРµ, РїРѕРёСЃРє РіРѕСЂРѕРґР° РёР»Рё РєРѕРѕСЂРґРёРЅР°С‚С‹</string>
+  <string name="location_city_title">Р“РѕСЂРѕРґ</string>
+  <string name="location_city_input_label">РќР°Р·РІР°РЅРёРµ РіРѕСЂРѕРґР°</string>
+  <string name="location_city_find_button">РќР°Р№С‚Рё РіРѕСЂРѕРґ</string>
+  <string name="location_searching">РџРѕРёСЃРє...</string>
+  <string name="location_coordinates_title">РљРѕРѕСЂРґРёРЅР°С‚С‹</string>
+  <string name="location_latitude_label">РЁРёСЂРѕС‚Р°</string>
+  <string name="location_longitude_label">Р”РѕР»РіРѕС‚Р°</string>
+  <string name="location_coordinates_save_button">РЎРѕС…СЂР°РЅРёС‚СЊ РїРѕ РєРѕРѕСЂРґРёРЅР°С‚Р°Рј</string>
+  <string name="location_saved_success">Р›РѕРєР°С†РёСЏ СЃРѕС…СЂР°РЅРµРЅР°</string>
+  <string name="location_error_device">РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰СѓСЋ Р»РѕРєР°С†РёСЋ</string>
+  <string name="location_error_empty_city">Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ РіРѕСЂРѕРґР°</string>
+  <string name="location_error_city_not_found">Р“РѕСЂРѕРґ РЅРµ РЅР°Р№РґРµРЅ</string>
+  <string name="location_error_invalid_coordinates">РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ С„РѕСЂРјР°С‚ РєРѕРѕСЂРґРёРЅР°С‚</string>
+  <string name="location_error_out_of_range">РЁРёСЂРѕС‚Р° РёР»Рё РґРѕР»РіРѕС‚Р° РІРЅРµ РґРѕРїСѓСЃС‚РёРјРѕРіРѕ РґРёР°РїР°Р·РѕРЅР°</string>
+  <string name="calc_method_label">РњРµС‚РѕРґ СЂР°СЃС‡РµС‚Р°</string>
+  <string name="calc_asr_label">Р Р°СЃС‡РµС‚ РђСЃСЂР°</string>
+  <string name="calc_dst_label">РџРµСЂРµС…РѕРґ РЅР° Р»РµС‚РЅРµРµ РІСЂРµРјСЏ</string>
+  <string name="calc_dst_auto">РђРІС‚Рѕ (РїРѕ СЂРµРіРёРѕРЅСѓ)</string>
+  <string name="calc_dst_minus_one">-1 С‡Р°СЃ</string>
+  <string name="calc_dst_plus_one">+1 С‡Р°СЃ</string>
+  <string name="calc_asr_shafi">РЎС‚Р°РЅРґР°СЂС‚РЅС‹Р№ (РЁР°С„РёРё, РњР°Р»РёРєРё, РҐР°РЅР±Р°Р»Рё)</string>
+  <string name="calc_asr_hanafi">РҐР°РЅР°С„Рё</string>
+  <string name="calc_method_mwl">Р’СЃРµРјРёСЂРЅР°СЏ РјСѓСЃСѓР»СЊРјР°РЅСЃРєР°СЏ Р»РёРіР°</string>
+  <string name="calc_method_isna">ISNA (РЎРµРІРµСЂРЅР°СЏ РђРјРµСЂРёРєР°)</string>
+  <string name="calc_method_egyptian">Р•РіРёРїРµС‚СЃРєРѕРµ СѓРїСЂР°РІР»РµРЅРёРµ</string>
+  <string name="calc_method_karachi">РљР°СЂР°С‡Рё</string>
+  <string name="calc_method_umm_al_qura">РЈРјРј Р°Р»СЊ-РљСѓСЂР°</string>
+  <string name="calc_method_dubai">Р”СѓР±Р°Р№</string>
+  <string name="calc_method_moonsighting">РљРѕРјРёС‚РµС‚ РЅР°Р±Р»СЋРґРµРЅРёСЏ Р»СѓРЅС‹</string>
+  <string name="calc_method_kuwait">РљСѓРІРµР№С‚</string>
+  <string name="calc_method_qatar">РљР°С‚Р°СЂ</string>
+  <string name="calc_method_singapore">РЎРёРЅРіР°РїСѓСЂ</string>
+  <string name="time_offset_hint">РќР°СЃС‚СЂРѕР№С‚Рµ СЃРјРµС‰РµРЅРёРµ РєР°Р¶РґРѕРіРѕ РІСЂРµРјРµРЅРё РІ РјРёРЅСѓС‚Р°С… РєРЅРѕРїРєР°РјРё РјРёРЅСѓСЃ Рё РїР»СЋСЃ.</string>
+  <string name="time_offset_format">%1$+d РјРёРЅ</string>
+  <!-- Common -->
+  <string name="str_loading">Р—Р°РіСЂСѓР·РєР°...</string>
+  <string name="footer_dua">Р”Р° РїСЂРёРјРµС‚ РђР»Р»Р°С… РІР°С€Рё РјРѕР»РёС‚РІС‹</string>
+  <string name="timer_prefix">С‡РµСЂРµР·</string>
+  <!-- Prayer Names -->
+  <string name="prayer_fajr">Р¤Р°РґР¶СЂ</string>
+  <string name="prayer_sunrise">Духа</string>
+  <string name="prayer_dhuhr">Р—СѓС…СЂ</string>
+  <string name="prayer_asr">РђСЃСЂ</string>
+  <string name="prayer_maghrib">РњР°РіСЂРёР±</string>
+  <string name="prayer_isha">РС€Р°</string>
+  <!-- Hijri Months -->
+  <string name="hijri_muharram">РњСѓС…Р°СЂСЂР°Рј</string>
+  <string name="hijri_safar">РЎР°С„Р°СЂ</string>
+  <string name="hijri_rabi_al_awwal">Р Р°Р±Рё Р°Р»СЊ-Р°РІРІР°Р»СЊ</string>
+  <string name="hijri_rabi_al_athani">Р Р°Р±Рё Р°Р»СЊ-Р°С…РёСЂ</string>
+  <string name="hijri_jumada_al_ula">Р”Р¶СѓРјР°РґР° Р°Р»СЊ-СѓР»СЏ</string>
+  <string name="hijri_jumada_al_akhirah">Р”Р¶СѓРјР°РґР° Р°Р»СЊ-Р°С…РёСЂР°</string>
+  <string name="hijri_rajab">Р Р°РґР¶Р°Р±</string>
+  <string name="hijri_shaban">РЁР°Р°Р±Р°РЅ</string>
+  <string name="hijri_ramadan">Р Р°РјР°РґР°РЅ</string>
+  <string name="hijri_shawwal">РЁР°РІРІР°Р»СЊ</string>
+  <string name="hijri_dhu_al_qadah">Р—СѓР»СЊ-РљР°РґР°</string>
+  <string name="hijri_dhu_al_hijjah">Р—СѓР»СЊ-РҐРёРґР¶Р°</string>
+  <string name="prayer_tahajjud">Тахаджуд</string>
+  <string name="lesson_wudu">Уроки омовения</string>
+  <string name="lesson_prayer_format">Уроки %1$s-намаза</string>
 </resources>

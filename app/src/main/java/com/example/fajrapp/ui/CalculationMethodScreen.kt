@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -42,7 +43,8 @@ import dev.chrisbanes.haze.HazeState
 fun CalculationMethodScreen(
     viewModel: SettingsViewModel,
     hazeState: HazeState,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onTimeOffsetClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var methodExpanded by remember { mutableStateOf(false) }
@@ -173,6 +175,43 @@ fun CalculationMethodScreen(
                         dstExpanded = false
                         viewModel.setDstMode(option.code)
                     }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.size(18.dp))
+
+        Text(
+            text = stringResource(R.string.settings_time_offset),
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        )
+
+        GlassContainer(
+            cornerRadius = 14.dp,
+            hazeState = hazeState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onTimeOffsetClick() }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = uiState.timeOffsetLabel,
+                    color = Color.White,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.85f)
                 )
             }
         }

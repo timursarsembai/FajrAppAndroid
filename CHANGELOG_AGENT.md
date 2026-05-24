@@ -250,3 +250,32 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: переработать структуру настроек и блоки намазов на главном экране
+- Статус: выполнено
+- Что сделано:
+  - Пункт `Смещение времени` убран с главной страницы `Настройки` и перенесен в экран `Метод расчета`.
+  - На экране `Метод расчета` добавлен отдельный переход в `Смещение времени` (с текущим статусом смещений).
+  - На главной странице добавлен намаз `Тахаджуд` после `Иша`.
+  - Время `Тахаджуд` рассчитывается как начало последней трети ночи между `Иша` и `Фаджр`:
+    - берется интервал `Иша -> Фаджр следующего дня`,
+    - вычисляется старт третьей части ночи (`Иша + 2/3 интервала`).
+  - `Восход` заменен на `Духа`; время `Духа` считается как `Восход + 20 минут`.
+  - Каждый блок намаза на главной странице сделан раскрывающимся (`dropdown`):
+    - по нажатию раскрывается контент,
+    - добавлены две пока неактивные кнопки: `Уроки омовения` и `Уроки <название>-намаза`.
+  - Модель `PrayerData` расширена ключом `key` для стабильного состояния раскрытия.
+  - Добавлены новые строковые ресурсы EN/RU (`Тахаджуд`, уроки, `Духа`).
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/SettingsScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/CalculationMethodScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/main/java/com/example/fajrapp/model/PrayerData.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/PrayerScreen.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство

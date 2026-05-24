@@ -1,4 +1,4 @@
-package com.example.fajrapp.viewmodel
+﻿package com.example.fajrapp.viewmodel
 
 import android.app.Application
 import android.icu.util.TimeZone as IcuTimeZone
@@ -37,7 +37,8 @@ data class PrayerUiState(
 )
 
 private data class PrayerEntry(
-    val offsetKey: String,
+    val key: String,
+    val offsetKey: String?,
     val name: String,
     val arabicName: String,
     val time: Date
@@ -153,18 +154,34 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         val offsets = prefsManager.getPrayerOffsets(SettingsViewModel.PRAYER_OFFSET_KEYS)
         val dstShiftMinutes = getConfiguredDstShiftMinutes(Date())
         val prayerTimes = PrayerTimes(currentCoordinates, dateComponents, params)
+
+        val tomorrow = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, 1) }
+        val tomorrowComponents = DateComponents(
+            tomorrow.get(Calendar.YEAR),
+            tomorrow.get(Calendar.MONTH) + 1,
+            tomorrow.get(Calendar.DAY_OF_MONTH)
+        )
+        val tomorrowTimes = PrayerTimes(currentCoordinates, tomorrowComponents, params)
+
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         val now = Date()
 
+        val duhaTime = applyOffset(prayerTimes.sunrise, 20)
+        val tahajjudTime = calculateTahajjudStart(
+            ishaTime = prayerTimes.isha,
+            nextFajrTime = tomorrowTimes.fajr
+        )
+
         val entries = listOf(
-            PrayerEntry(SettingsViewModel.OFFSET_FAJR, getString(R.string.prayer_fajr), "الفجر", prayerTimes.fajr),
-            PrayerEntry(SettingsViewModel.OFFSET_SUNRISE, getString(R.string.prayer_sunrise), "الشروق", prayerTimes.sunrise),
-            PrayerEntry(SettingsViewModel.OFFSET_DHUHR, getString(R.string.prayer_dhuhr), "الظهر", prayerTimes.dhuhr),
-            PrayerEntry(SettingsViewModel.OFFSET_ASR, getString(R.string.prayer_asr), "العصر", prayerTimes.asr),
-            PrayerEntry(SettingsViewModel.OFFSET_MAGHRIB, getString(R.string.prayer_maghrib), "المغرب", prayerTimes.maghrib),
-            PrayerEntry(SettingsViewModel.OFFSET_ISHA, getString(R.string.prayer_isha), "العشاء", prayerTimes.isha)
+            PrayerEntry("fajr", SettingsViewModel.OFFSET_FAJR, getString(R.string.prayer_fajr), "الفجر", prayerTimes.fajr),
+            PrayerEntry("duha", SettingsViewModel.OFFSET_SUNRISE, getString(R.string.prayer_sunrise), "الضحى", duhaTime),
+            PrayerEntry("dhuhr", SettingsViewModel.OFFSET_DHUHR, getString(R.string.prayer_dhuhr), "الظهر", prayerTimes.dhuhr),
+            PrayerEntry("asr", SettingsViewModel.OFFSET_ASR, getString(R.string.prayer_asr), "العصر", prayerTimes.asr),
+            PrayerEntry("maghrib", SettingsViewModel.OFFSET_MAGHRIB, getString(R.string.prayer_maghrib), "المغرب", prayerTimes.maghrib),
+            PrayerEntry("isha", SettingsViewModel.OFFSET_ISHA, getString(R.string.prayer_isha), "العشاء", prayerTimes.isha),
+            PrayerEntry("tahajjud", null, getString(R.string.prayer_tahajjud), "التهجد", tahajjudTime)
         ).map { entry ->
-            val prayerOffset = offsets[entry.offsetKey] ?: 0
+            val prayerOffset = entry.offsetKey?.let { offsets[it] ?: 0 } ?: 0
             entry.copy(time = applyOffset(entry.time, prayerOffset + dstShiftMinutes))
         }
 
@@ -181,6 +198,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
             prayersList.add(
                 PrayerData(
+                    key = entry.key,
                     name = entry.name,
                     arabicName = entry.arabicName,
                     time = timeFormatter.format(entry.time),
@@ -192,13 +210,6 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         if (!foundNext && prayersList.isNotEmpty()) {
-            val tomorrow = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, 1) }
-            val tomorrowComponents = DateComponents(
-                tomorrow.get(Calendar.YEAR),
-                tomorrow.get(Calendar.MONTH) + 1,
-                tomorrow.get(Calendar.DAY_OF_MONTH)
-            )
-            val tomorrowTimes = PrayerTimes(currentCoordinates, tomorrowComponents, params)
             nextPrayerTime = applyOffset(
                 tomorrowTimes.fajr,
                 (offsets[SettingsViewModel.OFFSET_FAJR] ?: 0) + dstShiftMinutes
@@ -294,6 +305,15 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun applyOffset(source: Date, offsetMinutes: Int): Date {
         return Date(source.time + offsetMinutes * 60_000L)
+    }
+
+    private fun calculateTahajjudStart(ishaTime: Date, nextFajrTime: Date): Date {
+        var nightDuration = nextFajrTime.time - ishaTime.time
+        if (nightDuration <= 0L) {
+            nightDuration += TimeUnit.DAYS.toMillis(1)
+        }
+        val thirdPartStartOffset = (nightDuration * 2L) / 3L
+        return Date(ishaTime.time + thirdPartStartOffset)
     }
 
     private fun getConfiguredDstShiftMinutes(now: Date): Int {
