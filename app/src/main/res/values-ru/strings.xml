@@ -18,7 +18,20 @@
     <string name="settings_offset_default">0 минут</string>
     <string name="settings_notifications_on">Включены</string>
     <string name="location_use_current">Использовать текущую локацию</string>
-    <string name="location_hint">Нажмите, чтобы определить и сохранить текущий город</string>
+    <string name="location_hint">Можно использовать автоопределение, поиск города или координаты</string>
+    <string name="location_city_title">Город</string>
+    <string name="location_city_input_label">Название города</string>
+    <string name="location_city_find_button">Найти город</string>
+    <string name="location_coordinates_title">Координаты</string>
+    <string name="location_latitude_label">Широта</string>
+    <string name="location_longitude_label">Долгота</string>
+    <string name="location_coordinates_save_button">Сохранить по координатам</string>
+    <string name="location_saved_success">Локация сохранена</string>
+    <string name="location_error_device">Не удалось получить текущую локацию</string>
+    <string name="location_error_empty_city">Введите название города</string>
+    <string name="location_error_city_not_found">Город не найден</string>
+    <string name="location_error_invalid_coordinates">Некорректный формат координат</string>
+    <string name="location_error_out_of_range">Широта или долгота вне допустимого диапазона</string>
     
     <!-- Common -->
     <string name="str_loading">Загрузка...</string>

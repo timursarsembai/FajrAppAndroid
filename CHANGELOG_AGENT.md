@@ -81,3 +81,26 @@
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на эмулятор
   - `adb shell am start -n com.example.fajrapp/com.example.fajrapp.MainActivity` -> экран запускается
+
+### Задача: добавить ручной ввод города и координат в настройках локации
+- Статус: выполнено
+- Что сделано:
+  - В экран `LocationScreen` добавлены:
+    - поле ввода города + кнопка поиска города,
+    - поля широты/долготы + кнопка сохранения по координатам,
+    - вывод сообщения об успехе/ошибке.
+  - В `SettingsViewModel` добавлены сценарии:
+    - `updateLocationFromCity(cityQuery)` — geocoding по названию города,
+    - `updateLocationFromCoordinates(lat, lon)` — валидация и сохранение координат,
+    - сохранение найденной локации в `SharedPreferences`,
+    - обновление `locationSubtitle`, `locationLatitude`, `locationLongitude`.
+  - Добавлены строковые ресурсы EN/RU для новых элементов UI и сообщений ошибок.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/LocationScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство

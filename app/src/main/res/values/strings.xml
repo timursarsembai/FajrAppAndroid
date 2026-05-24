@@ -18,7 +18,20 @@
     <string name="settings_offset_default">0 minutes</string>
     <string name="settings_notifications_on">On</string>
     <string name="location_use_current">Use current location</string>
-    <string name="location_hint">Tap to detect and save your current city</string>
+    <string name="location_hint">You can use auto-detection, city search, or coordinates</string>
+    <string name="location_city_title">City</string>
+    <string name="location_city_input_label">City name</string>
+    <string name="location_city_find_button">Find city</string>
+    <string name="location_coordinates_title">Coordinates</string>
+    <string name="location_latitude_label">Latitude</string>
+    <string name="location_longitude_label">Longitude</string>
+    <string name="location_coordinates_save_button">Save by coordinates</string>
+    <string name="location_saved_success">Location saved</string>
+    <string name="location_error_device">Could not get current location</string>
+    <string name="location_error_empty_city">Enter a city name</string>
+    <string name="location_error_city_not_found">City was not found</string>
+    <string name="location_error_invalid_coordinates">Invalid coordinate format</string>
+    <string name="location_error_out_of_range">Latitude or longitude out of range</string>
     
     <!-- Common -->
     <string name="str_loading">Loading...</string>
