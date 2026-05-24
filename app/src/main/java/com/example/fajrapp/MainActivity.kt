@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fajrapp.viewmodel.SettingsViewModel
 import com.example.fajrapp.ui.LanguageSelectionScreen
 import com.example.fajrapp.ui.LocationScreen
+import com.example.fajrapp.ui.CalculationMethodScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -119,7 +120,8 @@ class MainActivity : ComponentActivity() {
                                     viewModel = settingsViewModel, // We need to ensure this instance is shared or valid
                                     onBack = { navController.popBackStack() },
                                     onLanguageClick = { navController.navigate("languages") },
-                                    onLocationClick = { navController.navigate("location") }
+                                    onLocationClick = { navController.navigate("location") },
+                                    onCalculationMethodClick = { navController.navigate("calculation_method") }
                                 )
                             }
                             
@@ -145,6 +147,20 @@ class MainActivity : ComponentActivity() {
                                 popExitTransition = { fadeOut(animationSpec = tween(50)) }
                             ) {
                                 LocationScreen(
+                                    viewModel = settingsViewModel,
+                                    hazeState = hazeState,
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(
+                                "calculation_method",
+                                enterTransition = { fadeIn(animationSpec = tween(50)) },
+                                exitTransition = { fadeOut(animationSpec = tween(50)) },
+                                popEnterTransition = { fadeIn(animationSpec = tween(50)) },
+                                popExitTransition = { fadeOut(animationSpec = tween(50)) }
+                            ) {
+                                CalculationMethodScreen(
                                     viewModel = settingsViewModel,
                                     hazeState = hazeState,
                                     onBack = { navController.popBackStack() }

@@ -131,3 +131,33 @@
   - `CHANGELOG_AGENT.md`
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Задача: автопоиск города с выпадающими вариантами + старт реализации "Метод расчета"
+- Статус: выполнено
+- Что сделано:
+  - Реализован автопоиск города по мере ввода:
+    - при вводе от 2 символов запускается поиск,
+    - показывается выпадающий список найденных городов,
+    - выбор варианта из списка сразу сохраняет локацию.
+  - Добавлен экран `Метод расчета`:
+    - выбор метода расчета,
+    - выбор метода расчета Асра (Шафии/Ханафи).
+  - Выбранные настройки сохраняются в `SharedPreferences`.
+  - `PrayerViewModel` начал использовать сохраненные:
+    - метод расчета,
+    - метод Асра,
+    - и автоматически пересчитывает времена при изменении конфигурации.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/LocationScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/CalculationMethodScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/SettingsScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/data/PreferencesManager.kt`
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство

@@ -48,7 +48,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(),
     onBack: () -> Unit,
     onLanguageClick: () -> Unit,
-    onLocationClick: () -> Unit
+    onLocationClick: () -> Unit,
+    onCalculationMethodClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -123,8 +124,9 @@ fun SettingsScreen(
             SettingsItem(
                 icon = Icons.Rounded.Calculate,
                 title = stringResource(R.string.settings_calculation_method),
-                subtitle = stringResource(R.string.settings_method_default),
-                hazeState = hazeState
+                subtitle = uiState.calculationMethodLabel,
+                hazeState = hazeState,
+                onClick = onCalculationMethodClick
             )
             SettingsItem(
                 icon = Icons.Default.Schedule,

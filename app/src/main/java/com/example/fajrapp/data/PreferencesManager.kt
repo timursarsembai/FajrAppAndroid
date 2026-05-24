@@ -17,6 +17,8 @@ class PreferencesManager(context: Context) {
         private const val KEY_LON = "longitude"
         private const val KEY_CITY = "city_name"
         private const val KEY_LANG = "app_language"
+        private const val KEY_CALC_METHOD = "calc_method"
+        private const val KEY_MADHAB = "madhab"
     }
 
     fun saveLanguage(languageCode: String) {
@@ -25,6 +27,22 @@ class PreferencesManager(context: Context) {
 
     fun getLanguage(): String? {
         return prefs.getString(KEY_LANG, null)
+    }
+
+    fun saveCalculationMethod(methodCode: String) {
+        prefs.edit().putString(KEY_CALC_METHOD, methodCode).apply()
+    }
+
+    fun getCalculationMethod(): String? {
+        return prefs.getString(KEY_CALC_METHOD, null)
+    }
+
+    fun saveMadhab(madhabCode: String) {
+        prefs.edit().putString(KEY_MADHAB, madhabCode).apply()
+    }
+
+    fun getMadhab(): String? {
+        return prefs.getString(KEY_MADHAB, null)
     }
 
     fun saveLocation(lat: Double, lon: Double, cityName: String) {

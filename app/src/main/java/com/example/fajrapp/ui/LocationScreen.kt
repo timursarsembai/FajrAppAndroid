@@ -21,6 +21,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -58,6 +61,7 @@ fun LocationScreen(
     var cityQuery by rememberSaveable { mutableStateOf("") }
     var latitudeInput by rememberSaveable { mutableStateOf(uiState.locationLatitude) }
     var longitudeInput by rememberSaveable { mutableStateOf(uiState.locationLongitude) }
+    var cityMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(uiState.locationLatitude, uiState.locationLongitude) {
         if (uiState.locationLatitude.isNotBlank()) latitudeInput = uiState.locationLatitude
@@ -136,24 +140,65 @@ fun LocationScreen(
             modifier = Modifier.align(Alignment.Start)
         )
         Spacer(modifier = Modifier.size(8.dp))
-        OutlinedTextField(
-            value = cityQuery,
-            onValueChange = {
-                cityQuery = it
-                viewModel.clearLocationMessage()
-            },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(text = stringResource(R.string.location_city_input_label), color = Color.White.copy(alpha = 0.8f)) },
-            singleLine = true,
-            colors = locationTextFieldColors()
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = cityQuery,
+                onValueChange = {
+                    cityQuery = it
+                    viewModel.onCityQueryChanged(it)
+                    cityMenuExpanded = true
+                },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(text = stringResource(R.string.location_city_input_label), color = Color.White.copy(alpha = 0.8f)) },
+                singleLine = true,
+                trailingIcon = {
+                    if (uiState.isSearchingCities) {
+                        CircularProgressIndicator(
+                            color = Color.White.copy(alpha = 0.8f),
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                },
+                colors = locationTextFieldColors()
+            )
+
+            val showSuggestions = cityQuery.trim().length >= 2 && (uiState.citySuggestions.isNotEmpty() || uiState.isSearchingCities)
+            DropdownMenu(
+                expanded = cityMenuExpanded && showSuggestions,
+                onDismissRequest = { cityMenuExpanded = false },
+                modifier = Modifier.fillMaxWidth(0.95f)
+            ) {
+                if (uiState.isSearchingCities) {
+                    DropdownMenuItem(
+                        text = { Text(text = stringResource(R.string.location_searching), color = Color.White) },
+                        onClick = {},
+                        enabled = false
+                    )
+                } else {
+                    uiState.citySuggestions.forEach { suggestion ->
+                        DropdownMenuItem(
+                            text = { Text(text = suggestion.displayName, color = Color.White) },
+                            onClick = {
+                                cityQuery = suggestion.displayName
+                                cityMenuExpanded = false
+                                viewModel.selectCitySuggestion(suggestion)
+                            }
+                        )
+                    }
+                }
+            }
+        }
         Spacer(modifier = Modifier.size(10.dp))
         GlassActionButton(
             text = stringResource(R.string.location_city_find_button),
             icon = Icons.Default.Search,
             hazeState = hazeState,
             enabled = !uiState.isUpdatingLocation,
-            onClick = { viewModel.updateLocationFromCity(cityQuery) },
+            onClick = {
+                cityMenuExpanded = false
+                viewModel.updateLocationFromCity(cityQuery)
+            },
             modifier = Modifier.fillMaxWidth()
         )
 

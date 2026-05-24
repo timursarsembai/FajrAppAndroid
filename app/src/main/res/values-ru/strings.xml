@@ -22,6 +22,7 @@
     <string name="location_city_title">Город</string>
     <string name="location_city_input_label">Название города</string>
     <string name="location_city_find_button">Найти город</string>
+    <string name="location_searching">Поиск...</string>
     <string name="location_coordinates_title">Координаты</string>
     <string name="location_latitude_label">Широта</string>
     <string name="location_longitude_label">Долгота</string>
@@ -32,6 +33,20 @@
     <string name="location_error_city_not_found">Город не найден</string>
     <string name="location_error_invalid_coordinates">Некорректный формат координат</string>
     <string name="location_error_out_of_range">Широта или долгота вне допустимого диапазона</string>
+    <string name="calc_method_label">Метод расчета</string>
+    <string name="calc_asr_label">Расчет Асра</string>
+    <string name="calc_asr_shafi">Стандартный (Шафии, Малики, Ханбали)</string>
+    <string name="calc_asr_hanafi">Ханафи</string>
+    <string name="calc_method_mwl">Всемирная мусульманская лига</string>
+    <string name="calc_method_isna">ISNA (Северная Америка)</string>
+    <string name="calc_method_egyptian">Египетское управление</string>
+    <string name="calc_method_karachi">Карачи</string>
+    <string name="calc_method_umm_al_qura">Умм аль-Кура</string>
+    <string name="calc_method_dubai">Дубай</string>
+    <string name="calc_method_moonsighting">Комитет наблюдения луны</string>
+    <string name="calc_method_kuwait">Кувейт</string>
+    <string name="calc_method_qatar">Катар</string>
+    <string name="calc_method_singapore">Сингапур</string>
     
     <!-- Common -->
     <string name="str_loading">Загрузка...</string>

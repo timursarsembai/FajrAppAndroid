@@ -3,7 +3,6 @@ package com.example.fajrapp.viewmodel
 import android.app.Application
 import android.location.Geocoder
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.batoulapps.adhan.CalculationMethod
@@ -23,7 +22,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.chrono.HijrahDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -44,6 +42,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private val prefsManager = PreferencesManager(application)
     private var prayerTimesData: PrayerTimes? = null
     private var nextPrayerTime: Date? = null
+    private var lastConfigSignature: String? = null
 
     // Default coordinates (Almaty, Kazakhstan)
     private var currentCoordinates = Coordinates(43.238949, 76.945465)
@@ -66,7 +65,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                 locationName = saved.cityName,
                 isLoading = false
             )
-            calculatePrayerTimes()
+            maybeReloadConfiguration(force = true)
         }
 
         startTimer() // Always start timer
@@ -89,12 +88,12 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                     if (isDifferent) {
                         currentCoordinates = Coordinates(location.latitude, location.longitude)
                         updateLocationNameAndSave(location.latitude, location.longitude)
-                        calculatePrayerTimes()
+                        maybeReloadConfiguration(force = true)
                     }
                 } else if (saved == null) {
                     // Only fallback if nothing saved AND fetch failed
                     _uiState.value = _uiState.value.copy(locationName = "Almaty, Kazakhstan")
-                    calculatePrayerTimes() // Default coords
+                    maybeReloadConfiguration(force = true)
                 }
             } catch (e: Exception) {
                 if (saved == null) {
@@ -139,8 +138,10 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             today.get(Calendar.DAY_OF_MONTH)
         )
 
-        val params = CalculationMethod.MUSLIM_WORLD_LEAGUE.parameters
-        params.madhab = Madhab.HANAFI
+        val method = SettingsViewModel.toCalculationMethod(prefsManager.getCalculationMethod())
+        val madhab = SettingsViewModel.toMadhab(prefsManager.getMadhab())
+        val params = method.parameters
+        params.madhab = madhab
 
         prayerTimesData = PrayerTimes(currentCoordinates, dateComponents, params)
 
@@ -245,7 +246,8 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                 val now = Date()
                 val clockFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
                 val currentTime = clockFormatter.format(now)
-                
+
+                maybeReloadConfiguration()
                 updateCountdown(now)
                 
                 _uiState.value = _uiState.value.copy(
@@ -254,6 +256,25 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                 delay(1000L)
             }
         }
+    }
+
+    private fun maybeReloadConfiguration(force: Boolean = false) {
+        val saved = prefsManager.getSavedLocation()
+        val lat = saved?.latitude?.toString() ?: currentCoordinates.latitude.toString()
+        val lon = saved?.longitude?.toString() ?: currentCoordinates.longitude.toString()
+        val methodCode = prefsManager.getCalculationMethod() ?: "MUSLIM_WORLD_LEAGUE"
+        val madhabCode = prefsManager.getMadhab() ?: "HANAFI"
+        val signature = "$lat|$lon|$methodCode|$madhabCode"
+
+        if (!force && signature == lastConfigSignature) return
+
+        saved?.let {
+            currentCoordinates = Coordinates(it.latitude, it.longitude)
+            _uiState.value = _uiState.value.copy(locationName = it.cityName)
+        }
+
+        lastConfigSignature = signature
+        calculatePrayerTimes()
     }
 
     private fun updateCountdown(now: Date) {

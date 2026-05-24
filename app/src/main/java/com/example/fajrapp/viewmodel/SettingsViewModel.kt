@@ -6,10 +6,14 @@ import android.location.Address
 import android.location.Geocoder
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.batoulapps.adhan.CalculationMethod
+import com.batoulapps.adhan.Madhab
 import com.example.fajrapp.R
 import com.example.fajrapp.data.LocationManager
 import com.example.fajrapp.data.PreferencesManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,20 +28,47 @@ data class Language(
     val flagEmoji: String
 )
 
+data class CitySuggestion(
+    val displayName: String,
+    val latitude: Double,
+    val longitude: Double
+)
+
+data class CalculationMethodOption(
+    val code: String,
+    val displayName: String
+)
+
+data class MadhabOption(
+    val code: String,
+    val displayName: String
+)
+
 data class SettingsUiState(
     val selectedLanguage: Language = Language("en", "English", "English", "🇺🇸"),
     val locationSubtitle: String = "",
     val locationLatitude: String = "",
     val locationLongitude: String = "",
     val isUpdatingLocation: Boolean = false,
-    val locationActionMessage: String? = null
+    val locationActionMessage: String? = null,
+    val citySuggestions: List<CitySuggestion> = emptyList(),
+    val isSearchingCities: Boolean = false,
+    val selectedCalculationMethodCode: String = DEFAULT_CALC_METHOD_CODE,
+    val selectedMadhabCode: String = DEFAULT_MADHAB_CODE,
+    val calculationMethodLabel: String = "",
+    val madhabLabel: String = ""
 )
+
+private const val DEFAULT_CALC_METHOD_CODE = "MUSLIM_WORLD_LEAGUE"
+private const val DEFAULT_MADHAB_CODE = "HANAFI"
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val prefsManager = PreferencesManager(application)
     private val locationManager = LocationManager(application)
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    private var citySearchJob: Job? = null
 
     val availableLanguages = listOf(
         Language("en", "English", "English", "🇺🇸"),
@@ -57,6 +88,28 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         Language("fr", "French", "Français", "🇫🇷")
     ).sortedBy { it.nativeName }
 
+    val calculationMethodOptions by lazy {
+        listOf(
+            CalculationMethodOption("MUSLIM_WORLD_LEAGUE", getString(R.string.calc_method_mwl)),
+            CalculationMethodOption("NORTH_AMERICA", getString(R.string.calc_method_isna)),
+            CalculationMethodOption("EGYPTIAN", getString(R.string.calc_method_egyptian)),
+            CalculationMethodOption("KARACHI", getString(R.string.calc_method_karachi)),
+            CalculationMethodOption("UMM_AL_QURA", getString(R.string.calc_method_umm_al_qura)),
+            CalculationMethodOption("DUBAI", getString(R.string.calc_method_dubai)),
+            CalculationMethodOption("MOON_SIGHTING_COMMITTEE", getString(R.string.calc_method_moonsighting)),
+            CalculationMethodOption("KUWAIT", getString(R.string.calc_method_kuwait)),
+            CalculationMethodOption("QATAR", getString(R.string.calc_method_qatar)),
+            CalculationMethodOption("SINGAPORE", getString(R.string.calc_method_singapore))
+        )
+    }
+
+    val madhabOptions by lazy {
+        listOf(
+            MadhabOption("SHAFI", getString(R.string.calc_asr_shafi)),
+            MadhabOption("HANAFI", getString(R.string.calc_asr_hanafi))
+        )
+    }
+
     init {
         loadSettings()
     }
@@ -65,12 +118,18 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         val savedLangCode = prefsManager.getLanguage() ?: "en"
         val selectedLanguage = availableLanguages.find { it.code == savedLangCode } ?: availableLanguages.first()
         val savedLocation = prefsManager.getSavedLocation()
+        val selectedCalcCode = sanitizeMethodCode(prefsManager.getCalculationMethod())
+        val selectedMadhabCode = sanitizeMadhabCode(prefsManager.getMadhab())
 
         _uiState.value = _uiState.value.copy(
             selectedLanguage = selectedLanguage,
             locationSubtitle = savedLocation?.cityName ?: getString(R.string.settings_location_unknown),
             locationLatitude = savedLocation?.latitude?.let(::formatCoordinate) ?: "",
-            locationLongitude = savedLocation?.longitude?.let(::formatCoordinate) ?: ""
+            locationLongitude = savedLocation?.longitude?.let(::formatCoordinate) ?: "",
+            selectedCalculationMethodCode = selectedCalcCode,
+            selectedMadhabCode = selectedMadhabCode,
+            calculationMethodLabel = labelForMethod(selectedCalcCode),
+            madhabLabel = labelForMadhab(selectedMadhabCode)
         )
     }
 
@@ -81,6 +140,37 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun clearLocationMessage() {
         _uiState.value = _uiState.value.copy(locationActionMessage = null)
+    }
+
+    fun onCityQueryChanged(query: String) {
+        clearLocationMessage()
+        citySearchJob?.cancel()
+
+        if (query.trim().length < 2) {
+            _uiState.value = _uiState.value.copy(
+                citySuggestions = emptyList(),
+                isSearchingCities = false
+            )
+            return
+        }
+
+        citySearchJob = viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSearchingCities = true)
+            delay(350L)
+            val suggestions = searchCitySuggestions(query.trim())
+            _uiState.value = _uiState.value.copy(
+                citySuggestions = suggestions,
+                isSearchingCities = false
+            )
+        }
+    }
+
+    fun selectCitySuggestion(suggestion: CitySuggestion) {
+        saveResolvedLocation(suggestion.latitude, suggestion.longitude, suggestion.displayName)
+        _uiState.value = _uiState.value.copy(
+            citySuggestions = emptyList(),
+            locationActionMessage = getString(R.string.location_saved_success)
+        )
     }
 
     fun updateLocationFromDevice() {
@@ -136,7 +226,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             saveResolvedLocation(lat, lon, locationName)
             _uiState.value = _uiState.value.copy(
                 isUpdatingLocation = false,
-                locationActionMessage = getString(R.string.location_saved_success)
+                locationActionMessage = getString(R.string.location_saved_success),
+                citySuggestions = emptyList()
             )
         }
     }
@@ -169,15 +260,61 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun setCalculationMethod(code: String) {
+        val normalized = sanitizeMethodCode(code)
+        prefsManager.saveCalculationMethod(normalized)
+        _uiState.value = _uiState.value.copy(
+            selectedCalculationMethodCode = normalized,
+            calculationMethodLabel = labelForMethod(normalized)
+        )
+    }
+
+    fun setMadhab(code: String) {
+        val normalized = sanitizeMadhabCode(code)
+        prefsManager.saveMadhab(normalized)
+        _uiState.value = _uiState.value.copy(
+            selectedMadhabCode = normalized,
+            madhabLabel = labelForMadhab(normalized)
+        )
+    }
+
+    private suspend fun searchCitySuggestions(query: String): List<CitySuggestion> {
+        return withContext(Dispatchers.IO) {
+            val queryCandidates = buildCityQueryCandidates(query)
+            val localesToTry = listOf(Locale.getDefault(), Locale.ENGLISH, Locale("ru"), Locale("kk"))
+                .distinctBy { it.toLanguageTag() }
+
+            val suggestions = linkedMapOf<String, CitySuggestion>()
+
+            for (locale in localesToTry) {
+                try {
+                    val geocoder = Geocoder(getApplication(), locale)
+                    for (candidate in queryCandidates) {
+                        @Suppress("DEPRECATION")
+                        val addresses = geocoder.getFromLocationName(candidate, 6)
+                        for (address in addresses.orEmpty()) {
+                            val suggestion = citySuggestionFromAddress(address)
+                            val key = "${formatCoordinate(suggestion.latitude)}|${formatCoordinate(suggestion.longitude)}"
+                            suggestions.putIfAbsent(key, suggestion)
+                            if (suggestions.size >= 8) {
+                                return@withContext suggestions.values.toList()
+                            }
+                        }
+                    }
+                } catch (_: Exception) {
+                    // Try next locale.
+                }
+            }
+
+            suggestions.values.toList()
+        }
+    }
+
     private suspend fun findByCityName(cityQuery: String): Address? {
         return withContext(Dispatchers.IO) {
             val queryCandidates = buildCityQueryCandidates(cityQuery)
-            val localesToTry = listOf(
-                Locale.getDefault(),
-                Locale.ENGLISH,
-                Locale("ru"),
-                Locale("kk")
-            ).distinctBy { it.toLanguageTag() }
+            val localesToTry = listOf(Locale.getDefault(), Locale.ENGLISH, Locale("ru"), Locale("kk"))
+                .distinctBy { it.toLanguageTag() }
 
             for (locale in localesToTry) {
                 try {
@@ -235,6 +372,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    private fun citySuggestionFromAddress(address: Address): CitySuggestion {
+        val lat = address.latitude
+        val lon = address.longitude
+        val name = buildLocationDisplayName(address, lat, lon)
+        return CitySuggestion(name, lat, lon)
+    }
+
     private fun buildLocationDisplayName(address: Address?, lat: Double, lon: Double): String {
         if (address == null) return fallbackLocationLabel(lat, lon)
 
@@ -270,7 +414,46 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         return String.format(Locale.US, "%.6f", value)
     }
 
+    private fun sanitizeMethodCode(code: String?): String {
+        if (code.isNullOrBlank()) return DEFAULT_CALC_METHOD_CODE
+        return if (calculationMethodOptions.any { it.code == code }) code else DEFAULT_CALC_METHOD_CODE
+    }
+
+    private fun sanitizeMadhabCode(code: String?): String {
+        if (code.isNullOrBlank()) return DEFAULT_MADHAB_CODE
+        return if (madhabOptions.any { it.code == code }) code else DEFAULT_MADHAB_CODE
+    }
+
+    private fun labelForMethod(code: String): String {
+        return calculationMethodOptions.find { it.code == code }?.displayName ?: getString(R.string.calc_method_mwl)
+    }
+
+    private fun labelForMadhab(code: String): String {
+        return madhabOptions.find { it.code == code }?.displayName ?: getString(R.string.calc_asr_hanafi)
+    }
+
     private fun getString(resId: Int): String {
         return getApplication<Application>().getString(resId)
+    }
+
+    companion object {
+        fun toCalculationMethod(code: String?): CalculationMethod {
+            return when (code) {
+                "EGYPTIAN" -> CalculationMethod.EGYPTIAN
+                "KARACHI" -> CalculationMethod.KARACHI
+                "UMM_AL_QURA" -> CalculationMethod.UMM_AL_QURA
+                "DUBAI" -> CalculationMethod.DUBAI
+                "MOON_SIGHTING_COMMITTEE" -> CalculationMethod.MOON_SIGHTING_COMMITTEE
+                "NORTH_AMERICA" -> CalculationMethod.NORTH_AMERICA
+                "KUWAIT" -> CalculationMethod.KUWAIT
+                "QATAR" -> CalculationMethod.QATAR
+                "SINGAPORE" -> CalculationMethod.SINGAPORE
+                else -> CalculationMethod.MUSLIM_WORLD_LEAGUE
+            }
+        }
+
+        fun toMadhab(code: String?): Madhab {
+            return if (code == "SHAFI") Madhab.SHAFI else Madhab.HANAFI
+        }
     }
 }
