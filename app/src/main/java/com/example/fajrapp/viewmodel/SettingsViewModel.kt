@@ -1,6 +1,7 @@
 package com.example.fajrapp.viewmodel
 
 import android.app.Application
+import android.icu.text.Transliterator
 import android.location.Address
 import android.location.Geocoder
 import androidx.lifecycle.AndroidViewModel
@@ -170,14 +171,53 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     private suspend fun findByCityName(cityQuery: String): Address? {
         return withContext(Dispatchers.IO) {
-            try {
-                val geocoder = Geocoder(getApplication(), Locale.getDefault())
-                @Suppress("DEPRECATION")
-                val addresses = geocoder.getFromLocationName(cityQuery, 1)
-                addresses?.firstOrNull()
-            } catch (_: Exception) {
-                null
+            val queryCandidates = buildCityQueryCandidates(cityQuery)
+            val localesToTry = listOf(
+                Locale.getDefault(),
+                Locale.ENGLISH,
+                Locale("ru"),
+                Locale("kk")
+            ).distinctBy { it.toLanguageTag() }
+
+            for (locale in localesToTry) {
+                try {
+                    val geocoder = Geocoder(getApplication(), locale)
+                    for (query in queryCandidates) {
+                        @Suppress("DEPRECATION")
+                        val addresses = geocoder.getFromLocationName(query, 3)
+                        val found = addresses?.firstOrNull()
+                        if (found != null) return@withContext found
+                    }
+                } catch (_: Exception) {
+                    // Try next locale/query variation.
+                }
             }
+            null
+        }
+    }
+
+    private fun buildCityQueryCandidates(rawQuery: String): List<String> {
+        val query = rawQuery.trim().replace(Regex("\\s+"), " ")
+        val candidates = linkedSetOf<String>()
+        if (query.isBlank()) return emptyList()
+
+        candidates += query
+        candidates += query.replace('Ё', 'Е').replace('ё', 'е')
+
+        val latin = transliterateToLatin(query)
+        candidates += latin
+        candidates += latin.replace('’', '\'')
+        candidates += latin.replace("'", "")
+
+        return candidates.filter { it.isNotBlank() }
+    }
+
+    private fun transliterateToLatin(value: String): String {
+        return try {
+            val transliterator = Transliterator.getInstance("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC")
+            transliterator.transliterate(value)
+        } catch (_: Exception) {
+            value
         }
     }
 

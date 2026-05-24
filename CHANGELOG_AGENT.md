@@ -118,3 +118,16 @@
   - `CHANGELOG_AGENT.md`
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Задача: улучшить поиск города (кириллица/латиница)
+- Статус: выполнено
+- Что сделано:
+  - В `SettingsViewModel` доработан поиск города:
+    - добавлены несколько вариантов запроса (включая транслитерацию),
+    - поиск выполняется по нескольким locale (`default`, `en`, `ru`, `kk`),
+    - это повышает шанс, что `Алматы` и `Almaty` будут находиться одинаково.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
