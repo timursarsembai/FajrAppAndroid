@@ -237,3 +237,16 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: исправить отсутствие live-обновления на экране "Смещение времени"
+- Статус: выполнено
+- Что сделано:
+  - Найдена причина: `TimeOffsetScreen` не был подписан на `uiState`, из-за чего Compose не выполнял мгновенную перерисовку значений после нажатий `+/-`.
+  - Добавлена подписка `collectAsState()` на `viewModel.uiState` в `TimeOffsetScreen`.
+  - Значение смещения для каждой строки теперь берется из `uiState.timeOffsets` вместо прямого чтения через вызов метода без наблюдения состояния.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/TimeOffsetScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство

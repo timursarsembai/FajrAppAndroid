@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +43,8 @@ fun TimeOffsetScreen(
     hazeState: HazeState,
     onBack: () -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -100,7 +104,7 @@ fun TimeOffsetScreen(
         viewModel.prayerOffsetOptions.forEach { option ->
             TimeOffsetItem(
                 option = option,
-                value = viewModel.getTimeOffset(option.key),
+                value = uiState.timeOffsets[option.key] ?: 0,
                 hazeState = hazeState,
                 onMinusClick = { viewModel.adjustTimeOffset(option.key, -1) },
                 onPlusClick = { viewModel.adjustTimeOffset(option.key, 1) }
