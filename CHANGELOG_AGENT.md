@@ -104,3 +104,17 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: привести кнопки локации к общему стеклянному стилю приложения
+- Статус: выполнено
+- Что сделано:
+  - Удалены синие `Material` кнопки на экране локации.
+  - Добавлены стеклянные action-кнопки в стиле остальных элементов UI.
+  - Сохранены прежние действия:
+    - поиск по городу,
+    - сохранение по координатам.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/LocationScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
