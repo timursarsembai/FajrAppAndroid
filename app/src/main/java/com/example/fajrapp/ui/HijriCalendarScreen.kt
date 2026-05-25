@@ -2,6 +2,7 @@
 
 import android.os.Build
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -43,6 +45,7 @@ import java.time.format.TextStyle
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 private const val MONTH_RANGE = 120
 
@@ -134,17 +137,23 @@ fun HijriCalendarScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Text(
-                text = stringResource(
-                    R.string.calendar_year_format,
-                    visibleMonthData.hijriYear,
-                    visibleMonthData.gregorianYearLabel
-                ),
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center
-            )
+            GlassContainer(
+                cornerRadius = 14.dp,
+                hazeState = hazeState
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.calendar_year_format,
+                        visibleMonthData.hijriYear,
+                        visibleMonthData.gregorianYearLabel
+                    ),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
         }
@@ -163,7 +172,8 @@ fun HijriCalendarScreen(
                 MonthCalendarCard(
                     monthData = monthData,
                     weekDays = weekDays,
-                    hazeState = hazeState
+                    hazeState = hazeState,
+                    isCurrentMonth = offset == 0
                 )
             }
         }
@@ -215,17 +225,39 @@ private fun CalendarUnavailableScreen(
 private fun MonthCalendarCard(
     monthData: CalendarMonthData,
     weekDays: List<String>,
-    hazeState: HazeState
+    hazeState: HazeState,
+    isCurrentMonth: Boolean
 ) {
     GlassContainer(
         cornerRadius = 20.dp,
         hazeState = hazeState,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (isCurrentMonth) {
+                    Modifier.border(
+                        width = 1.5.dp,
+                        color = Color(0xFFFFE7A3),
+                        shape = RoundedCornerShape(20.dp)
+                    )
+                } else {
+                    Modifier
+                }
+            )
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) {
+            if (isCurrentMonth) {
+                Text(
+                    text = stringResource(R.string.calendar_current_month_badge),
+                    color = Color(0xFFFFE7A3),
+                    fontSize = 11.sp,
+                    fontStyle = FontStyle.Italic,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
             Text(
                 text = getHijriMonthName(monthData.hijriMonth),
-                color = Color.White,
+                color = if (isCurrentMonth) Color(0xFFFFF3C4) else Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )

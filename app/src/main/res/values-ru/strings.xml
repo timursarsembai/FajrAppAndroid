@@ -66,6 +66,7 @@
     <string name="calendar_week_fri">ПТ</string>
     <string name="calendar_week_sat">СБ</string>
     <string name="calendar_week_sun">ВС</string>
+    <string name="calendar_current_month_badge">Текущий месяц</string>
 
     <!-- Common -->
     <string name="str_loading">Загрузка...</string>

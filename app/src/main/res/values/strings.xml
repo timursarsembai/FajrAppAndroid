@@ -66,6 +66,7 @@
     <string name="calendar_week_fri">FRI</string>
     <string name="calendar_week_sat">SAT</string>
     <string name="calendar_week_sun">SUN</string>
+    <string name="calendar_current_month_badge">Current month</string>
     
     <!-- Common -->
     <string name="str_loading">Loading...</string>

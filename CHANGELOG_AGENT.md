@@ -332,3 +332,20 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: визуально выделить текущий месяц и год на экране календаря
+- Статус: выполнено
+- Что сделано:
+  - Годовой заголовок вынесен в отдельный стеклянный блок в шапке календаря.
+  - Текущий месяц выделен визуально:
+    - добавлена акцентная рамка карточки,
+    - добавлен бейдж `Текущий месяц`,
+    - слегка усилен цвет заголовка месяца.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство
