@@ -1,4 +1,4 @@
-package com.example.fajrapp.viewmodel
+﻿package com.example.fajrapp.viewmodel
 
 import android.app.Application
 import android.icu.text.Transliterator
@@ -55,7 +55,7 @@ data class PrayerOffsetOption(
 )
 
 data class SettingsUiState(
-    val selectedLanguage: Language = Language("en", "English", "English", "🇺🇸"),
+    val selectedLanguage: Language = Language("en", "English", "English", "US"),
     val locationSubtitle: String = "",
     val locationLatitude: String = "",
     val locationLongitude: String = "",
@@ -88,21 +88,21 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private var citySearchJob: Job? = null
 
     val availableLanguages = listOf(
-        Language("en", "English", "English", "🇺🇸"),
-        Language("ru", "Russian", "Русский", "🇷🇺"),
-        Language("kk", "Kazakh", "Қазақша", "🇰🇿"),
-        Language("es", "Spanish", "Español", "🇪🇸"),
-        Language("ar", "Arabic", "العربية", "🇸🇦"),
-        Language("in", "Indonesian", "Bahasa Indonesia", "🇮🇩"),
-        Language("ms", "Malaysian", "Bahasa Melayu", "🇲🇾"),
-        Language("ur", "Urdu", "اردو", "🇵🇰"),
-        Language("hi", "Hindi", "हिन्दी", "🇮🇳"),
-        Language("uz", "Uzbek", "O'zbek", "🇺🇿"),
-        Language("ky", "Kyrgyz", "Кыргызча", "🇰🇬"),
-        Language("tt", "Tatar", "Татарча", "🇷🇺"),
-        Language("fa", "Farsi", "فارسی", "🇮🇷"),
-        Language("tg", "Tajik", "Тоҷикӣ", "🇹🇯"),
-        Language("fr", "French", "Français", "🇫🇷")
+        Language("en", "English", "English", "US"),
+        Language("ru", "Russian", "Русский", "RU"),
+        Language("kk", "Kazakh", "Қазақша", "KZ"),
+        Language("es", "Spanish", "Español", "ES"),
+        Language("ar", "Arabic", "العربية", "SA"),
+        Language("in", "Indonesian", "Bahasa Indonesia", "ID"),
+        Language("ms", "Malaysian", "Bahasa Melayu", "MY"),
+        Language("ur", "Urdu", "اردو", "PK"),
+        Language("hi", "Hindi", "हिन्दी", "IN"),
+        Language("uz", "Uzbek", "O'zbek", "UZ"),
+        Language("ky", "Kyrgyz", "Кыргызча", "KG"),
+        Language("tt", "Tatar", "Татарча", "RU"),
+        Language("fa", "Farsi", "فارسی", "IR"),
+        Language("tg", "Tajik", "Тоҷикӣ", "TJ"),
+        Language("fr", "French", "Français", "FR")
     ).sortedBy { it.nativeName }
 
     val calculationMethodOptions by lazy {
@@ -423,7 +423,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
         val latin = transliterateToLatin(query)
         candidates += latin
-        candidates += latin.replace('’', '\'')
+        candidates += latin.replace("’", "'")
         candidates += latin.replace("'", "")
 
         return candidates.filter { it.isNotBlank() }

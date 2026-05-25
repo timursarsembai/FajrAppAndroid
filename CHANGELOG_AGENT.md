@@ -279,3 +279,17 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: устранить «крякозябры» (проблемы кодировки)
+- Статус: выполнено
+- Что сделано:
+  - Полностью восстановлен `values-ru/strings.xml` в корректной UTF-8 кодировке с нормальными русскими строками.
+  - В `SettingsViewModel` исправлены поврежденные литералы языка/названий и строка нормализации символов `Ё/ё`.
+  - Убраны поврежденные символы в обработке апострофа для поиска городов.
+- Измененные файлы:
+  - `app/src/main/res/values-ru/strings.xml`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство
