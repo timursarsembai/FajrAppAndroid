@@ -56,6 +56,16 @@
     <string name="time_offset_format">%1$+d min</string>
     <string name="lesson_wudu">Ablution lessons</string>
     <string name="lesson_prayer_format">Lessons of %1$s prayer</string>
+    <string name="calendar_title">Calendar</string>
+    <string name="calendar_unavailable">Calendar is available on Android 8.0 and newer.</string>
+    <string name="calendar_year_format">%1$d (%2$s)</string>
+    <string name="calendar_week_mon">MON</string>
+    <string name="calendar_week_tue">TUE</string>
+    <string name="calendar_week_wed">WED</string>
+    <string name="calendar_week_thu">THU</string>
+    <string name="calendar_week_fri">FRI</string>
+    <string name="calendar_week_sat">SAT</string>
+    <string name="calendar_week_sun">SUN</string>
     
     <!-- Common -->
     <string name="str_loading">Loading...</string>

@@ -17,6 +17,7 @@ import com.example.fajrapp.viewmodel.SettingsViewModel
 import com.example.fajrapp.ui.LanguageSelectionScreen
 import com.example.fajrapp.ui.LocationScreen
 import com.example.fajrapp.ui.CalculationMethodScreen
+import com.example.fajrapp.ui.HijriCalendarScreen
 import com.example.fajrapp.ui.TimeOffsetScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -104,10 +105,24 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 PrayerScreen(
                                     hazeState = hazeState,
-                                    onSettingsClick = { navController.navigate("settings") }
+                                    onSettingsClick = { navController.navigate("settings") },
+                                    onCalendarClick = { navController.navigate("calendar") }
                                 )
                             }
                             
+
+                            composable(
+                                "calendar",
+                                enterTransition = { fadeIn(animationSpec = tween(50)) },
+                                exitTransition = { fadeOut(animationSpec = tween(50)) },
+                                popEnterTransition = { fadeIn(animationSpec = tween(50)) },
+                                popExitTransition = { fadeOut(animationSpec = tween(50)) }
+                            ) {
+                                HijriCalendarScreen(
+                                    hazeState = hazeState,
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
 
                             composable(
                                 "settings",

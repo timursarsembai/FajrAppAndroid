@@ -51,7 +51,8 @@ import dev.chrisbanes.haze.HazeState
 fun PrayerScreen(
     viewModel: PrayerViewModel = viewModel(),
     hazeState: HazeState,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onCalendarClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val expandedStates = remember { mutableStateMapOf<String, Boolean>() }
@@ -105,7 +106,11 @@ fun PrayerScreen(
                         cornerRadius = boxCornerRadius,
                         hazeState = hazeState
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 13.dp * scale, vertical = 8.dp * scale)) {
+                        Column(
+                            modifier = Modifier
+                                .clickable { onCalendarClick() }
+                                .padding(horizontal = 13.dp * scale, vertical = 8.dp * scale)
+                        ) {
                             Text(
                                 text = uiState.hijriDate,
                                 color = Color.White,

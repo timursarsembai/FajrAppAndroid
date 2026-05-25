@@ -56,6 +56,16 @@
     <string name="time_offset_format">%1$+d мин</string>
     <string name="lesson_wudu">Уроки омовения</string>
     <string name="lesson_prayer_format">Уроки %1$s-намаза</string>
+    <string name="calendar_title">Календарь</string>
+    <string name="calendar_unavailable">Календарь доступен на Android 8.0 и новее.</string>
+    <string name="calendar_year_format">%1$d (%2$s)</string>
+    <string name="calendar_week_mon">ПН</string>
+    <string name="calendar_week_tue">ВТ</string>
+    <string name="calendar_week_wed">СР</string>
+    <string name="calendar_week_thu">ЧТ</string>
+    <string name="calendar_week_fri">ПТ</string>
+    <string name="calendar_week_sat">СБ</string>
+    <string name="calendar_week_sun">ВС</string>
 
     <!-- Common -->
     <string name="str_loading">Загрузка...</string>
