@@ -385,13 +385,19 @@ private fun buildMonthData(
 }
 
 private fun buildGregorianMonthLabel(start: LocalDate, end: LocalDate, locale: Locale): String {
-    val firstMonth = start.month.getDisplayName(TextStyle.FULL, locale)
-    val secondMonth = end.month.getDisplayName(TextStyle.FULL, locale)
+    val firstMonth = getStandaloneMonthName(start.month, locale)
+    val secondMonth = getStandaloneMonthName(end.month, locale)
     return if (start.month == end.month && start.year == end.year) {
         capitalizeMonth(firstMonth, locale)
     } else {
         "${capitalizeMonth(firstMonth, locale)} - ${capitalizeMonth(secondMonth, locale)}"
     }
+}
+
+private fun getStandaloneMonthName(month: java.time.Month, locale: Locale): String {
+    val standalone = month.getDisplayName(TextStyle.FULL_STANDALONE, locale)
+    if (standalone.isNotBlank()) return standalone
+    return month.getDisplayName(TextStyle.FULL, locale)
 }
 
 private fun buildGregorianYearLabel(start: LocalDate, end: LocalDate): String {

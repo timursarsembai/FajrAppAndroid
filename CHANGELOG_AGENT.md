@@ -381,3 +381,16 @@
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
   - `adb shell dumpsys meminfo com.example.fajrapp` -> TOTAL PSS около 157 MB
   - `adb shell dumpsys gfxinfo com.example.fajrapp` -> подтверждена основная нагрузка на UI thread (а не GPU)
+
+### Задача: исправить склонения месяцев по миляди в календаре (русский)
+- Статус: выполнено
+- Что сделано:
+  - Для названий месяцев по миляди в календаре заменено форматирование на `TextStyle.FULL_STANDALONE`.
+  - Это дает именительный падеж в русском (`Май - Июнь` вместо `Мая - Июня`).
+  - Добавлен fallback на `TextStyle.FULL`, если standalone-форма недоступна.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство
