@@ -67,6 +67,36 @@
     <string name="calendar_week_sat">СБ</string>
     <string name="calendar_week_sun">ВС</string>
     <string name="calendar_current_month_badge">Текущий месяц</string>
+    <string name="calendar_prev_month">Предыдущий месяц</string>
+    <string name="calendar_next_month">Следующий месяц</string>
+    <string name="calendar_reset_month">Текущий месяц</string>
+    <string name="calendar_holidays_title">Исламские праздники этого года по хиджре</string>
+    <string name="calendar_holiday_eid_al_fitr">Ид Аль-Фитр (Ораза Айт, Ораза Байрам)</string>
+    <string name="calendar_holiday_eid_al_adha">Ид Аль-Адха (Курбан Айт, Курбан Байрам)</string>
+    <string name="calendar_holiday_line_format">%1$s: %2$d %3$s %4$d / %5$s</string>
+    <string name="alarm_title">Будильники</string>
+    <string name="alarm_create_title">Создать будильник</string>
+    <string name="alarm_edit_title">Изменить будильник</string>
+    <string name="alarm_before">До</string>
+    <string name="alarm_after">После</string>
+    <string name="alarm_minutes_label">Минуты</string>
+    <string name="alarm_add_button">Добавить будильник</string>
+    <string name="alarm_save_button">Сохранить</string>
+    <string name="alarm_empty">Нет будильников</string>
+    <string name="alarm_not_found">Будильник не найден</string>
+    <string name="alarm_repeat_label">Повтор</string>
+    <string name="alarm_repeat_weekly">Каждую неделю</string>
+    <string name="alarm_repeat_custom">Выбор дней</string>
+    <string name="alarm_repeat_custom_summary">Выбранные дни недели</string>
+    <string name="alarm_ringtone_label">Звонок</string>
+    <string name="alarm_ringtone_system_default">Системный будильник</string>
+    <string name="alarm_before_format">За %1$d мин до намаза</string>
+    <string name="alarm_after_format">Через %1$d мин после начала намаза</string>
+    <string name="alarm_delete">Удалить будильник</string>
+    <string name="alarm_notification_title">Будильник намаза</string>
+    <string name="alarm_notification_text">Напоминание: %1$s</string>
+    <string name="alarm_channel_name">Будильники намаза</string>
+    <string name="alarm_channel_description">Уведомления будильников, привязанных к намазам</string>
 
     <!-- Common -->
     <string name="str_loading">Загрузка...</string>

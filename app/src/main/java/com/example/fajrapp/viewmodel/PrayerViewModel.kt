@@ -29,7 +29,6 @@ import kotlin.math.abs
 
 data class PrayerUiState(
     val prayerTimes: List<PrayerData> = emptyList(),
-    val currentTimeFormatted: String = "00:00:00",
     val locationName: String = "",
     val hijriDate: String = "",
     val gregorianDate: String = "",
@@ -202,9 +201,9 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                     name = entry.name,
                     arabicName = entry.arabicName,
                     time = timeFormatter.format(entry.time),
+                    timeMillis = entry.time.time,
                     isNext = isNext,
-                    isPassed = isPassed && !isNext,
-                    timeLeft = if (isNext) "${getString(R.string.timer_prefix)} --:--:--" else null
+                    isPassed = isPassed && !isNext
                 )
             )
         }
@@ -217,8 +216,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
             prayersList[0] = prayersList[0].copy(
                 isNext = true,
-                isPassed = false,
-                timeLeft = "${getString(R.string.timer_prefix)} --:--:--"
+                isPassed = false
             )
         }
 
@@ -265,15 +263,21 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun startTimer() {
         viewModelScope.launch {
+            var secondsFromLastConfigCheck = 0
             while (true) {
                 val now = Date()
-                val clockFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-                val currentTime = clockFormatter.format(now)
 
-                maybeReloadConfiguration()
-                updateCountdown(now)
+                if (nextPrayerTime?.before(now) == true) {
+                    calculatePrayerTimes()
+                    secondsFromLastConfigCheck = 0
+                }
 
-                _uiState.value = _uiState.value.copy(currentTimeFormatted = currentTime)
+                if (secondsFromLastConfigCheck >= 30) {
+                    maybeReloadConfiguration()
+                    secondsFromLastConfigCheck = 0
+                } else {
+                    secondsFromLastConfigCheck++
+                }
                 delay(1000L)
             }
         }
@@ -424,33 +428,4 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         return value.lowercase(Locale.ROOT).replace(Regex("[^\\p{L}\\p{Nd}]"), "")
     }
 
-    private fun updateCountdown(now: Date) {
-        nextPrayerTime?.let { nextTime ->
-            var diffMillis = nextTime.time - now.time
-
-            if (diffMillis < 0) {
-                calculatePrayerTimes()
-                return
-            }
-
-            val hours = TimeUnit.MILLISECONDS.toHours(diffMillis)
-            diffMillis -= TimeUnit.HOURS.toMillis(hours)
-            val minutes = TimeUnit.MILLISECONDS.toMinutes(diffMillis)
-            diffMillis -= TimeUnit.MINUTES.toMillis(minutes)
-            val seconds = TimeUnit.MILLISECONDS.toSeconds(diffMillis)
-
-            val formattedCountdown = String.format(
-                Locale.getDefault(),
-                "${getString(R.string.timer_prefix)} %02d:%02d:%02d",
-                hours,
-                minutes,
-                seconds
-            )
-
-            val updatedPrayers = _uiState.value.prayerTimes.map {
-                if (it.isNext) it.copy(timeLeft = formattedCountdown) else it
-            }
-            _uiState.value = _uiState.value.copy(prayerTimes = updatedPrayers)
-        }
-    }
 }

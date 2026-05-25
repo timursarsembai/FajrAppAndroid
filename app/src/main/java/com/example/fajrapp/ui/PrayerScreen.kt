@@ -1,6 +1,8 @@
 ﻿package com.example.fajrapp.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -31,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,13 +49,19 @@ import com.example.fajrapp.model.PrayerData
 import com.example.fajrapp.ui.components.GlassContainer
 import com.example.fajrapp.viewmodel.PrayerViewModel
 import dev.chrisbanes.haze.HazeState
+import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun PrayerScreen(
     viewModel: PrayerViewModel = viewModel(),
     hazeState: HazeState,
     onSettingsClick: () -> Unit,
-    onCalendarClick: () -> Unit
+    onCalendarClick: () -> Unit,
+    onClockClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val expandedStates = remember { mutableStateMapOf<String, Boolean>() }
@@ -147,20 +156,18 @@ fun PrayerScreen(
                 }
 
                 GlassContainer(
-                    modifier = Modifier.padding(bottom = 24.dp * scale),
+                    modifier = Modifier
+                        .padding(bottom = 24.dp * scale)
+                        .clickable { onClockClick() },
                     cornerRadius = timerCornerRadius,
-                    hazeState = hazeState
+                    hazeState = hazeState,
+                    blurEnabled = false
                 ) {
                     Column(
                         modifier = Modifier.padding(horizontal = 28.dp * scale, vertical = 14.dp * scale),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = uiState.currentTimeFormatted,
-                            color = Color.White,
-                            fontSize = timerFontSize,
-                            fontWeight = FontWeight.Bold
-                        )
+                        LiveClockText(fontSize = timerFontSize)
                         Spacer(modifier = Modifier.height(6.dp * scale))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -202,6 +209,7 @@ fun PrayerScreen(
                         hazeState = hazeState,
                         isExpanded = isExpanded,
                         onToggleExpand = { expandedStates[prayer.key] = !isExpanded },
+                        timerPrefix = stringResource(R.string.timer_prefix),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -220,10 +228,12 @@ private fun PrayerItem(
     hazeState: HazeState,
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
+    timerPrefix: String,
     modifier: Modifier = Modifier
 ) {
     val internalPadding = 16.dp * scale
     val cornerRadius = 24.dp * scale
+    val highlightColor = Color(0xFFFFE7A3)
     val iconBoxSize = 24.dp * scale
     val iconSize = 16.dp * scale
     val checkMarkSpacer = 12.dp * scale
@@ -231,9 +241,20 @@ private fun PrayerItem(
     val arabicSize = (16 * scale).sp
 
     GlassContainer(
-        modifier = modifier,
+        modifier = modifier.then(
+            if (prayer.isNext) {
+                Modifier.border(
+                    width = 1.5.dp,
+                    color = Color(0xFFFFE7A3),
+                    shape = RoundedCornerShape(cornerRadius)
+                )
+            } else {
+                Modifier
+            }
+        ),
         cornerRadius = cornerRadius,
-        hazeState = hazeState
+        hazeState = hazeState,
+        blurEnabled = false
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -251,19 +272,21 @@ private fun PrayerItem(
                             .padding(0.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        GlassContainer(
-                            cornerRadius = iconBoxSize / 2,
-                            hazeState = hazeState,
-                            modifier = Modifier.size(iconBoxSize)
+                        Box(
+                            modifier = Modifier
+                                .size(iconBoxSize)
+                                .background(
+                                    color = Color.White.copy(alpha = 0.22f),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(iconSize)
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(iconSize)
+                            )
                         }
                     }
                     Spacer(modifier = Modifier.width(checkMarkSpacer))
@@ -272,7 +295,7 @@ private fun PrayerItem(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = prayer.name,
-                        color = Color.White,
+                        color = if (prayer.isNext) highlightColor else Color.White,
                         fontSize = titleSize,
                         fontWeight = FontWeight.Bold
                     )
@@ -286,14 +309,14 @@ private fun PrayerItem(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = prayer.time,
-                        color = Color.White,
+                        color = if (prayer.isNext) highlightColor else Color.White,
                         fontSize = timeSize,
                         fontWeight = FontWeight.Bold
                     )
-                    if (prayer.timeLeft != null) {
-                        Text(
-                            text = prayer.timeLeft,
-                            color = Color.White.copy(alpha = 0.8f),
+                    if (prayer.isNext) {
+                        NextPrayerCountdownText(
+                            targetTimeMillis = prayer.timeMillis,
+                            timerPrefix = timerPrefix,
                             fontSize = timeLeftSize
                         )
                     }
@@ -331,6 +354,57 @@ private fun PrayerItem(
 }
 
 @Composable
+private fun LiveClockText(fontSize: TextUnit) {
+    val value by produceState(initialValue = "00:00:00") {
+        val formatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        while (true) {
+            value = formatter.format(Date())
+            delay(1000L)
+        }
+    }
+    Text(
+        text = value,
+        color = Color.White,
+        fontSize = fontSize,
+        fontWeight = FontWeight.Bold
+    )
+}
+
+@Composable
+private fun NextPrayerCountdownText(
+    targetTimeMillis: Long,
+    timerPrefix: String,
+    fontSize: TextUnit
+) {
+    val value by produceState(initialValue = "$timerPrefix --:--:--", key1 = targetTimeMillis, key2 = timerPrefix) {
+        while (true) {
+            var diffMillis = targetTimeMillis - System.currentTimeMillis()
+            if (diffMillis < 0L) diffMillis = 0L
+
+            val hours = TimeUnit.MILLISECONDS.toHours(diffMillis)
+            diffMillis -= TimeUnit.HOURS.toMillis(hours)
+            val minutes = TimeUnit.MILLISECONDS.toMinutes(diffMillis)
+            diffMillis -= TimeUnit.MINUTES.toMillis(minutes)
+            val seconds = TimeUnit.MILLISECONDS.toSeconds(diffMillis)
+
+            value = String.format(
+                Locale.getDefault(),
+                "$timerPrefix %02d:%02d:%02d",
+                hours,
+                minutes,
+                seconds
+            )
+            delay(1000L)
+        }
+    }
+    Text(
+        text = value,
+        color = Color.White.copy(alpha = 0.8f),
+        fontSize = fontSize
+    )
+}
+
+@Composable
 private fun LessonButton(
     text: String,
     hazeState: HazeState,
@@ -339,6 +413,7 @@ private fun LessonButton(
     GlassContainer(
         cornerRadius = 14.dp * scale,
         hazeState = hazeState,
+        blurEnabled = false,
         modifier = Modifier
             .fillMaxWidth()
             .height(44.dp * scale)

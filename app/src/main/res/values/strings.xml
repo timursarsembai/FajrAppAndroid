@@ -67,6 +67,36 @@
     <string name="calendar_week_sat">SAT</string>
     <string name="calendar_week_sun">SUN</string>
     <string name="calendar_current_month_badge">Current month</string>
+    <string name="calendar_prev_month">Previous month</string>
+    <string name="calendar_next_month">Next month</string>
+    <string name="calendar_reset_month">Current month</string>
+    <string name="calendar_holidays_title">Islamic holidays for this Hijri year</string>
+    <string name="calendar_holiday_eid_al_fitr">Eid al-Fitr (Oraza Ait, Oraza Bayram)</string>
+    <string name="calendar_holiday_eid_al_adha">Eid al-Adha (Qurban Ait, Qurban Bayram)</string>
+    <string name="calendar_holiday_line_format">%1$s: %2$d %3$s %4$d / %5$s</string>
+    <string name="alarm_title">Prayer alarms</string>
+    <string name="alarm_create_title">Create alarm</string>
+    <string name="alarm_edit_title">Edit alarm</string>
+    <string name="alarm_before">Before</string>
+    <string name="alarm_after">After</string>
+    <string name="alarm_minutes_label">Minutes</string>
+    <string name="alarm_add_button">Add alarm</string>
+    <string name="alarm_save_button">Save</string>
+    <string name="alarm_empty">No alarms</string>
+    <string name="alarm_not_found">Alarm not found</string>
+    <string name="alarm_repeat_label">Repeat</string>
+    <string name="alarm_repeat_weekly">Every week</string>
+    <string name="alarm_repeat_custom">Choose days</string>
+    <string name="alarm_repeat_custom_summary">Selected weekdays</string>
+    <string name="alarm_ringtone_label">Sound</string>
+    <string name="alarm_ringtone_system_default">System default alarm</string>
+    <string name="alarm_before_format">%1$d min before prayer</string>
+    <string name="alarm_after_format">%1$d min after prayer starts</string>
+    <string name="alarm_delete">Delete alarm</string>
+    <string name="alarm_notification_title">Prayer alarm</string>
+    <string name="alarm_notification_text">%1$s reminder</string>
+    <string name="alarm_channel_name">Prayer alarms</string>
+    <string name="alarm_channel_description">Alarm notifications tied to prayer times</string>
     
     <!-- Common -->
     <string name="str_loading">Loading...</string>

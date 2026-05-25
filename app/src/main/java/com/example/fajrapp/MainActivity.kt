@@ -1,14 +1,14 @@
 package com.example.fajrapp
 
 import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,6 +19,9 @@ import com.example.fajrapp.ui.LocationScreen
 import com.example.fajrapp.ui.CalculationMethodScreen
 import com.example.fajrapp.ui.HijriCalendarScreen
 import com.example.fajrapp.ui.TimeOffsetScreen
+import com.example.fajrapp.ui.PrayerAlarmsScreen
+import com.example.fajrapp.ui.PrayerAlarmAddScreen
+import com.example.fajrapp.ui.PrayerAlarmEditScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.fajrapp.ui.PrayerScreen
 import com.example.fajrapp.ui.SettingsScreen
 import com.example.fajrapp.ui.theme.FajrAppTheme
+import com.example.fajrapp.viewmodel.PrayerAlarmViewModel
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 
@@ -51,10 +55,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         
         requestPermissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
+            buildList {
+                add(Manifest.permission.ACCESS_FINE_LOCATION)
+                add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    add(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }.toTypedArray()
         )
 
         setContent {
@@ -66,6 +73,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val hazeState = remember { HazeState() }
                     val settingsViewModel: SettingsViewModel = viewModel() // Activity-scoped ViewModel
+                    val prayerAlarmViewModel: PrayerAlarmViewModel = viewModel()
 
                     // Shared Background with Haze Source
                     Box(modifier = Modifier.fillMaxSize()) {
@@ -100,23 +108,174 @@ class MainActivity : ComponentActivity() {
                         NavHost(navController = navController, startDestination = "home") {
                             composable(
                                 "home",
-                                enterTransition = { fadeIn(animationSpec = tween(50)) },
-                                exitTransition = { fadeOut(animationSpec = tween(50)) }
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
                             ) {
                                 PrayerScreen(
                                     hazeState = hazeState,
                                     onSettingsClick = { navController.navigate("settings") },
-                                    onCalendarClick = { navController.navigate("calendar") }
+                                    onCalendarClick = { navController.navigate("calendar") },
+                                    onClockClick = { navController.navigate("alarms") }
                                 )
                             }
                             
 
                             composable(
+                                "alarms",
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
+                            ) {
+                                PrayerAlarmsScreen(
+                                    hazeState = hazeState,
+                                    viewModel = prayerAlarmViewModel,
+                                    onBack = { navController.popBackStack() },
+                                    onAddClick = { navController.navigate("alarm_add") },
+                                    onAlarmClick = { alarmId -> navController.navigate("alarm_edit/$alarmId") }
+                                )
+                            }
+
+                            composable(
+                                "alarm_add",
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
+                            ) {
+                                PrayerAlarmAddScreen(
+                                    hazeState = hazeState,
+                                    viewModel = prayerAlarmViewModel,
+                                    onBack = { navController.popBackStack() },
+                                    onAlarmAdded = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(
+                                "alarm_edit/{alarmId}",
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
+                            ) { backStackEntry ->
+                                val alarmId = backStackEntry.arguments?.getString("alarmId")?.toIntOrNull() ?: -1
+                                PrayerAlarmEditScreen(
+                                    alarmId = alarmId,
+                                    hazeState = hazeState,
+                                    viewModel = prayerAlarmViewModel,
+                                    onBack = { navController.popBackStack() },
+                                    onAlarmUpdated = { navController.popBackStack() }
+                                )
+                            }
+
+                            composable(
                                 "calendar",
-                                enterTransition = { fadeIn(animationSpec = tween(50)) },
-                                exitTransition = { fadeOut(animationSpec = tween(50)) },
-                                popEnterTransition = { fadeIn(animationSpec = tween(50)) },
-                                popExitTransition = { fadeOut(animationSpec = tween(50)) }
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
                             ) {
                                 HijriCalendarScreen(
                                     hazeState = hazeState,
@@ -126,10 +285,30 @@ class MainActivity : ComponentActivity() {
 
                             composable(
                                 "settings",
-                                enterTransition = { fadeIn(animationSpec = tween(50)) },
-                                exitTransition = { fadeOut(animationSpec = tween(50)) },
-                                popEnterTransition = { fadeIn(animationSpec = tween(50)) },
-                                popExitTransition = { fadeOut(animationSpec = tween(50)) }
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
                             ) {
                                 SettingsScreen(
                                     hazeState = hazeState,
@@ -143,10 +322,30 @@ class MainActivity : ComponentActivity() {
                             
                             composable(
                                 "languages",
-                                enterTransition = { fadeIn(animationSpec = tween(50)) },
-                                exitTransition = { fadeOut(animationSpec = tween(50)) },
-                                popEnterTransition = { fadeIn(animationSpec = tween(50)) },
-                                popExitTransition = { fadeOut(animationSpec = tween(50)) }
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
                             ) {
                                 LanguageSelectionScreen(
                                     viewModel = settingsViewModel,
@@ -157,10 +356,30 @@ class MainActivity : ComponentActivity() {
 
                             composable(
                                 "location",
-                                enterTransition = { fadeIn(animationSpec = tween(50)) },
-                                exitTransition = { fadeOut(animationSpec = tween(50)) },
-                                popEnterTransition = { fadeIn(animationSpec = tween(50)) },
-                                popExitTransition = { fadeOut(animationSpec = tween(50)) }
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
                             ) {
                                 LocationScreen(
                                     viewModel = settingsViewModel,
@@ -171,10 +390,30 @@ class MainActivity : ComponentActivity() {
 
                             composable(
                                 "calculation_method",
-                                enterTransition = { fadeIn(animationSpec = tween(50)) },
-                                exitTransition = { fadeOut(animationSpec = tween(50)) },
-                                popEnterTransition = { fadeIn(animationSpec = tween(50)) },
-                                popExitTransition = { fadeOut(animationSpec = tween(50)) }
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
                             ) {
                                 CalculationMethodScreen(
                                     viewModel = settingsViewModel,
@@ -186,10 +425,30 @@ class MainActivity : ComponentActivity() {
 
                             composable(
                                 "time_offset",
-                                enterTransition = { fadeIn(animationSpec = tween(50)) },
-                                exitTransition = { fadeOut(animationSpec = tween(50)) },
-                                popEnterTransition = { fadeIn(animationSpec = tween(50)) },
-                                popExitTransition = { fadeOut(animationSpec = tween(50)) }
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
                             ) {
                                 TimeOffsetScreen(
                                     viewModel = settingsViewModel,
