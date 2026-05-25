@@ -349,3 +349,17 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: сделать ячейки календаря почти квадратными
+- Статус: выполнено
+- Что сделано:
+  - Убрана фиксированная вертикальная высота ячеек календаря.
+  - Добавлена пропорция `aspectRatio(0.95f)`, чтобы высота была почти равна ширине.
+  - Уменьшены внутренние вертикальные отступы внутри ячейки.
+  - Немного уменьшен `lineHeight` у чисел, чтобы ячейка визуально была компактнее.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -307,7 +308,7 @@ private fun RowScope.CalendarDayCellView(
         modifier = Modifier
             .weight(1f)
             .padding(2.dp)
-            .height(54.dp)
+            .aspectRatio(0.95f)
     ) {
         if (cell.hijriDay == null) {
             Box(modifier = Modifier.fillMaxSize())
@@ -315,7 +316,7 @@ private fun RowScope.CalendarDayCellView(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 6.dp),
+                    .padding(vertical = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -323,13 +324,13 @@ private fun RowScope.CalendarDayCellView(
                     color = textColor,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    lineHeight = 16.sp
+                    lineHeight = 15.sp
                 )
                 Text(
                     text = cell.gregorianDay?.toString().orEmpty(),
                     color = Color.White.copy(alpha = 0.75f),
                     fontSize = 10.sp,
-                    lineHeight = 12.sp
+                    lineHeight = 11.sp
                 )
             }
         }
