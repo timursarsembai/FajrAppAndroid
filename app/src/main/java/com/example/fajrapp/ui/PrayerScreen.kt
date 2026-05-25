@@ -69,14 +69,11 @@ fun PrayerScreen(
         val horizontalPadding = 28.dp * scale
         val verticalPadding = 16.dp * scale
         val smallPadding = 8.dp * scale
-        val spacerHeight = 16.dp * scale
-
-        val timerFontSize = (40 * scale).sp
+        val timerFontSize = (53.3f * scale).sp
         val dateBigFontSize = (14 * scale).sp
         val dateSmallFontSize = (12 * scale).sp
         val prayerNameFontSize = (22 * scale).sp
         val prayerTimeFontSize = (26 * scale).sp
-        val footerFontSize = (12 * scale).sp
 
         val settingsIconSize = 24.dp * scale
         val locationIconSize = 16.dp * scale
@@ -149,13 +146,32 @@ fun PrayerScreen(
                     cornerRadius = timerCornerRadius,
                     hazeState = hazeState
                 ) {
-                    Text(
-                        text = uiState.currentTimeFormatted,
-                        color = Color.White,
-                        fontSize = timerFontSize,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 32.dp * scale, vertical = 16.dp * scale)
-                    )
+                    Column(
+                        modifier = Modifier.padding(horizontal = 28.dp * scale, vertical = 14.dp * scale),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = uiState.currentTimeFormatted,
+                            color = Color.White,
+                            fontSize = timerFontSize,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(6.dp * scale))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = Color.White.copy(alpha = 0.9f),
+                                modifier = Modifier.size(locationIconSize)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp * scale))
+                            Text(
+                                text = uiState.locationName,
+                                color = Color.White.copy(alpha = 0.92f),
+                                fontSize = dateBigFontSize
+                            )
+                        }
+                    }
                 }
             }
 
@@ -186,41 +202,6 @@ fun PrayerScreen(
                 }
             }
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = spacerHeight)
-            ) {
-                GlassContainer(
-                    cornerRadius = timerCornerRadius,
-                    modifier = Modifier.padding(bottom = 8.dp * scale),
-                    hazeState = hazeState
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp * scale, vertical = 8.dp * scale),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(locationIconSize)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp * scale))
-                        Text(
-                            text = uiState.locationName,
-                            color = Color.White,
-                            fontSize = dateBigFontSize
-                        )
-                    }
-                }
-
-                Text(
-                    text = stringResource(R.string.footer_dua),
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontSize = footerFontSize,
-                    modifier = Modifier.padding(bottom = smallPadding)
-                )
-            }
         }
     }
 }
