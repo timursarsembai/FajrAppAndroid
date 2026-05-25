@@ -305,6 +305,7 @@ private fun RowScope.CalendarDayCellView(
     GlassContainer(
         cornerRadius = 10.dp,
         hazeState = hazeState,
+        blurEnabled = false,
         modifier = Modifier
             .weight(1f)
             .padding(2.dp)

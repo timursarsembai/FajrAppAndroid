@@ -363,3 +363,21 @@
 - Проверка:
   - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
   - `.\gradlew.bat installDebug` -> APK установлен на устройство
+
+### Задача: оптимизировать производительность на слабых устройствах
+- Статус: выполнено
+- Что сделано:
+  - В `GlassContainer` добавлен автоматический `performance mode`:
+    - на low-RAM устройствах и Android <= 11 realtime blur отключается,
+    - вместо blur используется облегченный полупрозрачный фон + рамка (без `hazeChild`).
+  - Добавлен параметр `blurEnabled` в `GlassContainer` для точечного отключения blur.
+  - Для сетки календаря blur в ячейках отключен принудительно (`blurEnabled = false`), чтобы снизить нагрузку на UI-поток.
+- Измененные файлы:
+  - `app/src/main/java/com/example/fajrapp/ui/components/GlassComponents.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Проверка:
+  - `.\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> APK установлен на устройство
+  - `adb shell dumpsys meminfo com.example.fajrapp` -> TOTAL PSS около 157 MB
+  - `adb shell dumpsys gfxinfo com.example.fajrapp` -> подтверждена основная нагрузка на UI thread (а не GPU)
