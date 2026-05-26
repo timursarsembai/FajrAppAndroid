@@ -18,6 +18,13 @@
     <string name="settings_offset_default">0 минут</string>
     <string name="settings_offset_custom">Пользовательское</string>
     <string name="settings_notifications_on">Включены</string>
+    <string name="settings_notifications_enabled_count">Включено: %1$d из %2$d</string>
+    <string name="notification_single_sound">Один звук для всех намазов</string>
+    <string name="notification_enable_label">Включить уведомление</string>
+    <string name="notification_sound_label">Звук</string>
+    <string name="notification_sound_system_default">Системный звук по умолчанию</string>
+    <string name="notification_sounds_azan">Азаны</string>
+    <string name="notification_sounds_system">Стандартные звуки</string>
     <string name="location_use_current">Использовать текущую локацию</string>
     <string name="location_hint">Можно использовать автоопределение, поиск города или координаты</string>
     <string name="location_city_title">Город</string>
@@ -70,10 +77,16 @@
     <string name="calendar_prev_month">Предыдущий месяц</string>
     <string name="calendar_next_month">Следующий месяц</string>
     <string name="calendar_reset_month">Текущий месяц</string>
-    <string name="calendar_holidays_title">Исламские праздники этого года по хиджре</string>
-    <string name="calendar_holiday_eid_al_fitr">Ид Аль-Фитр (Ораза Айт, Ораза Байрам)</string>
-    <string name="calendar_holiday_eid_al_adha">Ид Аль-Адха (Курбан Айт, Курбан Байрам)</string>
-    <string name="calendar_holiday_line_format">%1$s: %2$d %3$s %4$d / %5$s</string>
+    <string name="calendar_holidays_title">Исламские праздники (%1$s/%2$s)</string>
+    <string name="calendar_holiday_eid_al_fitr_translit">Ид аль-Фитр</string>
+    <string name="calendar_holiday_eid_al_fitr_arabic">عيد الفطر</string>
+    <string name="calendar_holiday_eid_al_fitr_aliases">(Ораза Айт, Ораза Байрам)</string>
+    <string name="calendar_holiday_eid_al_adha_translit">Ид аль-Адха</string>
+    <string name="calendar_holiday_eid_al_adha_arabic">عيد الأضحى</string>
+    <string name="calendar_holiday_eid_al_adha_aliases">(Курбан Айт, Курбан Байрам)</string>
+    <string name="calendar_holiday_title_line">%1$s (%2$s)</string>
+    <string name="calendar_holiday_dates_line">%1$s / %2$s</string>
+    <string name="calendar_holiday_tashriq_dates_line">Дни ташрика (3 дня): %1$s / %2$s</string>
     <string name="alarm_title">Будильники</string>
     <string name="alarm_create_title">Создать будильник</string>
     <string name="alarm_edit_title">Изменить будильник</string>
@@ -111,6 +124,7 @@
     <string name="prayer_maghrib">Магриб</string>
     <string name="prayer_isha">Иша</string>
     <string name="prayer_tahajjud">Тахаджуд</string>
+    <string name="prayer_duha_explanation_format">Время Восхода по расчетам: %1$s, плюс 20 минут — начало времени Духа намаза: %2$s. По Сунне желательно немного оттянуть Духа и совершить его примерно за 1,5-2 часа до времени Зухр, то есть ориентировочно в диапазоне %3$s-%4$s.</string>
 
     <!-- Hijri Months -->
     <string name="hijri_muharram">Мухаррам</string>

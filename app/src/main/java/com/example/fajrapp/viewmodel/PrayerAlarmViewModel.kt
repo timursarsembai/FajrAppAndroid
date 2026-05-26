@@ -1,8 +1,10 @@
 package com.example.fajrapp.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.media.RingtoneManager
 import androidx.lifecycle.AndroidViewModel
+import com.example.fajrapp.FajrApp
 import com.example.fajrapp.R
 import com.example.fajrapp.data.PreferencesManager
 import com.example.fajrapp.data.PrayerAlarmScheduler
@@ -11,6 +13,7 @@ import com.example.fajrapp.model.RepeatMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.Locale
 
 data class PrayerAlarmOption(
     val key: String,
@@ -29,25 +32,26 @@ data class PrayerAlarmUiState(
 class PrayerAlarmViewModel(application: Application) : AndroidViewModel(application) {
     private val prefsManager = PreferencesManager(application)
     private val scheduler = PrayerAlarmScheduler(application)
+    private var cachedLocaleCode: String? = null
+    private var prayerOptionsCache: List<PrayerAlarmOption> = emptyList()
+    private var ringtoneOptionsCache: List<RingtoneOption> = emptyList()
 
     private val _uiState = MutableStateFlow(PrayerAlarmUiState())
     val uiState: StateFlow<PrayerAlarmUiState> = _uiState.asStateFlow()
 
-    val prayerOptions by lazy {
-        listOf(
-            PrayerAlarmOption("fajr", getString(R.string.prayer_fajr)),
-            PrayerAlarmOption("duha", getString(R.string.prayer_sunrise)),
-            PrayerAlarmOption("dhuhr", getString(R.string.prayer_dhuhr)),
-            PrayerAlarmOption("asr", getString(R.string.prayer_asr)),
-            PrayerAlarmOption("maghrib", getString(R.string.prayer_maghrib)),
-            PrayerAlarmOption("isha", getString(R.string.prayer_isha)),
-            PrayerAlarmOption("tahajjud", getString(R.string.prayer_tahajjud))
-        )
-    }
+    val prayerOptions: List<PrayerAlarmOption>
+        get() {
+            ensureLocalizedCaches()
+            return prayerOptionsCache
+        }
 
-    private val prayerOrder = prayerOptions.mapIndexed { index, option -> option.key to index }.toMap()
+    val ringtoneOptions: List<RingtoneOption>
+        get() {
+            ensureLocalizedCaches()
+            return ringtoneOptionsCache
+        }
 
-    val ringtoneOptions by lazy {
+    private fun buildRingtoneOptions(): List<RingtoneOption> {
         val result = mutableListOf(
             RingtoneOption(
                 uri = null,
@@ -72,7 +76,25 @@ class PrayerAlarmViewModel(application: Application) : AndroidViewModel(applicat
                 cursor.close()
             }
         }
-        result
+        return result
+    }
+
+    private fun ensureLocalizedCaches() {
+        val localeCode = appLanguageCode()
+        if (cachedLocaleCode == localeCode && prayerOptionsCache.isNotEmpty() && ringtoneOptionsCache.isNotEmpty()) {
+            return
+        }
+        cachedLocaleCode = localeCode
+        prayerOptionsCache = listOf(
+            PrayerAlarmOption("fajr", getString(R.string.prayer_fajr)),
+            PrayerAlarmOption("duha", getString(R.string.prayer_sunrise)),
+            PrayerAlarmOption("dhuhr", getString(R.string.prayer_dhuhr)),
+            PrayerAlarmOption("asr", getString(R.string.prayer_asr)),
+            PrayerAlarmOption("maghrib", getString(R.string.prayer_maghrib)),
+            PrayerAlarmOption("isha", getString(R.string.prayer_isha)),
+            PrayerAlarmOption("tahajjud", getString(R.string.prayer_tahajjud))
+        )
+        ringtoneOptionsCache = buildRingtoneOptions()
     }
 
     init {
@@ -166,16 +188,42 @@ class PrayerAlarmViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     private fun getString(resId: Int): String {
-        return getApplication<Application>().getString(resId)
+        return getLocalizedContext().getString(resId)
     }
 
     private fun sortAlarms(alarms: List<PrayerAlarm>): List<PrayerAlarm> {
+        val prayerOrder = mapOf(
+            "fajr" to 0,
+            "duha" to 1,
+            "dhuhr" to 2,
+            "asr" to 3,
+            "maghrib" to 4,
+            "isha" to 5,
+            "tahajjud" to 6
+        )
         return alarms.sortedWith(
             compareBy<PrayerAlarm>(
                 { prayerOrder[it.prayerKey] ?: Int.MAX_VALUE },
                 { it.offsetMinutes },
                 { it.id }
             )
+        )
+    }
+
+    private fun appLanguageCode(): String {
+        val raw = prefsManager.getLanguage().orEmpty()
+        val normalized = when (raw.lowercase(Locale.US)) {
+            "kz" -> "kk"
+            "id" -> "in"
+            else -> raw.lowercase(Locale.US)
+        }
+        return normalized.ifBlank { Locale.getDefault().language.lowercase(Locale.US) }
+    }
+
+    private fun getLocalizedContext(): Context {
+        return FajrApp.updateBaseContextLocale(
+            getApplication<Application>(),
+            appLanguageCode()
         )
     }
 

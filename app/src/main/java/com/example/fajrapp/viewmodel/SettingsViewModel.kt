@@ -1,16 +1,20 @@
 ﻿package com.example.fajrapp.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.icu.text.Transliterator
 import android.location.Address
 import android.location.Geocoder
+import android.media.RingtoneManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.batoulapps.adhan.CalculationMethod
 import com.batoulapps.adhan.Madhab
+import com.example.fajrapp.FajrApp
 import com.example.fajrapp.R
 import com.example.fajrapp.data.LocationManager
 import com.example.fajrapp.data.PreferencesManager
+import com.example.fajrapp.util.LocationNameLocalizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -30,6 +34,7 @@ data class Language(
 
 data class CitySuggestion(
     val displayName: String,
+    val rawName: String,
     val latitude: Double,
     val longitude: Double
 )
@@ -54,6 +59,20 @@ data class PrayerOffsetOption(
     val displayName: String
 )
 
+data class NotificationSoundOption(
+    val uri: String?,
+    val title: String,
+    val sourceKey: String
+)
+
+data class PrayerNotificationOption(
+    val prayerKey: String,
+    val prayerLabel: String,
+    val enabled: Boolean,
+    val soundUri: String?,
+    val soundTitle: String
+)
+
 data class SettingsUiState(
     val selectedLanguage: Language = Language("en", "English", "English", "US"),
     val locationSubtitle: String = "",
@@ -69,6 +88,11 @@ data class SettingsUiState(
     val calculationMethodLabel: String = "",
     val madhabLabel: String = "",
     val dstModeLabel: String = "",
+    val notificationsSummary: String = "",
+    val notificationsUseSingleSound: Boolean = true,
+    val notificationsGlobalSoundUri: String? = null,
+    val notificationsGlobalSoundTitle: String = "",
+    val notificationsByPrayer: List<PrayerNotificationOption> = emptyList(),
     val timeOffsets: Map<String, Int> = emptyMap(),
     val timeOffsetLabel: String = ""
 )
@@ -86,6 +110,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     private var citySearchJob: Job? = null
+    private var cachedLocaleCode: String? = null
+    private var calculationMethodOptionsCache: List<CalculationMethodOption> = emptyList()
+    private var madhabOptionsCache: List<MadhabOption> = emptyList()
+    private var dstModeOptionsCache: List<DstModeOption> = emptyList()
+    private var prayerOffsetOptionsCache: List<PrayerOffsetOption> = emptyList()
+    private var notificationPrayerDefinitionsCache: List<Pair<String, String>> = emptyList()
+    private var notificationSoundOptionsCache: List<NotificationSoundOption> = emptyList()
 
     val availableLanguages = listOf(
         Language("en", "English", "English", "US"),
@@ -105,8 +136,46 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         Language("fr", "French", "Français", "FR")
     ).sortedBy { it.nativeName }
 
-    val calculationMethodOptions by lazy {
-        listOf(
+    val calculationMethodOptions: List<CalculationMethodOption>
+        get() {
+            ensureLocalizedCaches()
+            return calculationMethodOptionsCache
+        }
+
+    val madhabOptions: List<MadhabOption>
+        get() {
+            ensureLocalizedCaches()
+            return madhabOptionsCache
+        }
+
+    val dstModeOptions: List<DstModeOption>
+        get() {
+            ensureLocalizedCaches()
+            return dstModeOptionsCache
+        }
+
+    val prayerOffsetOptions: List<PrayerOffsetOption>
+        get() {
+            ensureLocalizedCaches()
+            return prayerOffsetOptionsCache
+        }
+
+    val notificationSoundOptions: List<NotificationSoundOption>
+        get() {
+            ensureLocalizedCaches()
+            return notificationSoundOptionsCache
+        }
+
+    init {
+        loadSettings()
+    }
+
+    private fun ensureLocalizedCaches() {
+        val localeCode = appLanguageCode()
+        if (cachedLocaleCode == localeCode && calculationMethodOptionsCache.isNotEmpty()) return
+
+        cachedLocaleCode = localeCode
+        calculationMethodOptionsCache = listOf(
             CalculationMethodOption("MUSLIM_WORLD_LEAGUE", getString(R.string.calc_method_mwl)),
             CalculationMethodOption("NORTH_AMERICA", getString(R.string.calc_method_isna)),
             CalculationMethodOption("EGYPTIAN", getString(R.string.calc_method_egyptian)),
@@ -118,25 +187,16 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             CalculationMethodOption("QATAR", getString(R.string.calc_method_qatar)),
             CalculationMethodOption("SINGAPORE", getString(R.string.calc_method_singapore))
         )
-    }
-
-    val madhabOptions by lazy {
-        listOf(
+        madhabOptionsCache = listOf(
             MadhabOption("SHAFI", getString(R.string.calc_asr_shafi)),
             MadhabOption("HANAFI", getString(R.string.calc_asr_hanafi))
         )
-    }
-
-    val dstModeOptions by lazy {
-        listOf(
+        dstModeOptionsCache = listOf(
             DstModeOption(DST_MODE_AUTO, getString(R.string.calc_dst_auto)),
             DstModeOption(DST_MODE_MINUS_ONE_HOUR, getString(R.string.calc_dst_minus_one)),
             DstModeOption(DST_MODE_PLUS_ONE_HOUR, getString(R.string.calc_dst_plus_one))
         )
-    }
-
-    val prayerOffsetOptions by lazy {
-        listOf(
+        prayerOffsetOptionsCache = listOf(
             PrayerOffsetOption(OFFSET_FAJR, getString(R.string.prayer_fajr)),
             PrayerOffsetOption(OFFSET_SUNRISE, getString(R.string.prayer_sunrise)),
             PrayerOffsetOption(OFFSET_DHUHR, getString(R.string.prayer_dhuhr)),
@@ -144,24 +204,57 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             PrayerOffsetOption(OFFSET_MAGHRIB, getString(R.string.prayer_maghrib)),
             PrayerOffsetOption(OFFSET_ISHA, getString(R.string.prayer_isha))
         )
+        notificationPrayerDefinitionsCache = listOf(
+            OFFSET_FAJR to getString(R.string.prayer_fajr),
+            PRAYER_DUHA to getString(R.string.prayer_sunrise),
+            OFFSET_DHUHR to getString(R.string.prayer_dhuhr),
+            OFFSET_ASR to getString(R.string.prayer_asr),
+            OFFSET_MAGHRIB to getString(R.string.prayer_maghrib),
+            OFFSET_ISHA to getString(R.string.prayer_isha),
+            PRAYER_TAHAJJUD to getString(R.string.prayer_tahajjud)
+        )
+        notificationSoundOptionsCache = buildNotificationSoundOptions()
     }
 
-    init {
-        loadSettings()
+    private fun notificationPrayerDefinitions(): List<Pair<String, String>> {
+        ensureLocalizedCaches()
+        return notificationPrayerDefinitionsCache
     }
 
     private fun loadSettings() {
-        val savedLangCode = prefsManager.getLanguage() ?: "en"
+        ensureLocalizedCaches()
+        val savedLangCode = normalizeAppLanguageCode(prefsManager.getLanguage() ?: "en")
         val selectedLanguage = availableLanguages.find { it.code == savedLangCode } ?: availableLanguages.first()
         val savedLocation = prefsManager.getSavedLocation()
         val selectedCalcCode = sanitizeMethodCode(prefsManager.getCalculationMethod())
         val selectedMadhabCode = sanitizeMadhabCode(prefsManager.getMadhab())
         val selectedDstCode = normalizeDstModeCode(prefsManager.getDstMode())
         val offsets = prefsManager.getPrayerOffsets(PRAYER_OFFSET_KEYS)
+        val notificationsUseSingleSound = prefsManager.getNotificationsUseSingleSound()
+        val notificationsGlobalSoundUri = prefsManager.getNotificationsGlobalSoundUri()
+        val notificationsGlobalSoundTitle = resolveSoundTitle(
+            uri = notificationsGlobalSoundUri,
+            storedTitle = prefsManager.getNotificationsGlobalSoundTitle()
+        )
+        val notificationsByPrayer = notificationPrayerDefinitions().map { (prayerKey, prayerLabel) ->
+            val soundUri = prefsManager.getPrayerNotificationSoundUri(prayerKey)
+            val soundTitle = resolveSoundTitle(
+                uri = soundUri,
+                storedTitle = prefsManager.getPrayerNotificationSoundTitle(prayerKey)
+            )
+            PrayerNotificationOption(
+                prayerKey = prayerKey,
+                prayerLabel = prayerLabel,
+                enabled = prefsManager.getPrayerNotificationEnabled(prayerKey),
+                soundUri = soundUri,
+                soundTitle = soundTitle
+            )
+        }
 
         _uiState.value = _uiState.value.copy(
             selectedLanguage = selectedLanguage,
-            locationSubtitle = savedLocation?.cityName ?: getString(R.string.settings_location_unknown),
+            locationSubtitle = savedLocation?.cityName?.let(::localizeLocationName)
+                ?: getString(R.string.settings_location_unknown),
             locationLatitude = savedLocation?.latitude?.let(::formatCoordinate) ?: "",
             locationLongitude = savedLocation?.longitude?.let(::formatCoordinate) ?: "",
             selectedCalculationMethodCode = selectedCalcCode,
@@ -170,14 +263,24 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             calculationMethodLabel = labelForMethod(selectedCalcCode),
             madhabLabel = labelForMadhab(selectedMadhabCode),
             dstModeLabel = labelForDstMode(selectedDstCode),
+            notificationsSummary = buildNotificationsSummary(
+                useSingleSound = notificationsUseSingleSound,
+                prayerOptions = notificationsByPrayer
+            ),
+            notificationsUseSingleSound = notificationsUseSingleSound,
+            notificationsGlobalSoundUri = notificationsGlobalSoundUri,
+            notificationsGlobalSoundTitle = notificationsGlobalSoundTitle,
+            notificationsByPrayer = notificationsByPrayer,
             timeOffsets = offsets,
             timeOffsetLabel = buildTimeOffsetLabel(offsets)
         )
     }
 
     fun setLanguage(language: Language) {
-        prefsManager.saveLanguage(language.code)
-        _uiState.value = _uiState.value.copy(selectedLanguage = language)
+        val normalized = normalizeAppLanguageCode(language.code)
+        prefsManager.saveLanguage(normalized)
+        cachedLocaleCode = null
+        loadSettings()
     }
 
     fun clearLocationMessage() {
@@ -208,7 +311,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun selectCitySuggestion(suggestion: CitySuggestion) {
-        saveResolvedLocation(suggestion.latitude, suggestion.longitude, suggestion.displayName)
+        saveResolvedLocation(suggestion.latitude, suggestion.longitude, suggestion.rawName)
         _uiState.value = _uiState.value.copy(
             citySuggestions = emptyList(),
             locationActionMessage = getString(R.string.location_saved_success)
@@ -329,6 +432,28 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         )
     }
 
+    fun setNotificationsUseSingleSound(enabled: Boolean) {
+        prefsManager.saveNotificationsUseSingleSound(enabled)
+        loadSettings()
+    }
+
+    fun setGlobalNotificationSound(option: NotificationSoundOption) {
+        prefsManager.saveNotificationsGlobalSound(option.uri, option.title)
+        loadSettings()
+    }
+
+    fun setPrayerNotificationEnabled(prayerKey: String, enabled: Boolean) {
+        if (prayerKey !in NOTIFICATION_PRAYER_KEYS) return
+        prefsManager.savePrayerNotificationEnabled(prayerKey, enabled)
+        loadSettings()
+    }
+
+    fun setPrayerNotificationSound(prayerKey: String, option: NotificationSoundOption) {
+        if (prayerKey !in NOTIFICATION_PRAYER_KEYS) return
+        prefsManager.savePrayerNotificationSound(prayerKey, option.uri, option.title)
+        loadSettings()
+    }
+
     fun getTimeOffset(prayerKey: String): Int {
         return _uiState.value.timeOffsets[prayerKey] ?: 0
     }
@@ -358,10 +483,98 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    private fun buildNotificationsSummary(
+        useSingleSound: Boolean,
+        prayerOptions: List<PrayerNotificationOption>
+    ): String {
+        if (useSingleSound) return getString(R.string.settings_notifications_on)
+        val enabledCount = prayerOptions.count { it.enabled }
+        return getString(R.string.settings_notifications_enabled_count, enabledCount, prayerOptions.size)
+    }
+
+    private fun resolveSoundTitle(uri: String?, storedTitle: String): String {
+        if (uri == null) return getString(R.string.notification_sound_system_default)
+        notificationSoundOptions.firstOrNull { it.uri == uri }?.title?.let { resolved ->
+            if (resolved.isNotBlank()) return resolved
+        }
+        if (storedTitle.isNotBlank()) return storedTitle
+        return getString(R.string.notification_sound_system_default)
+    }
+
+    private fun buildNotificationSoundOptions(): List<NotificationSoundOption> {
+        val app = getApplication<Application>()
+        val result = mutableListOf(
+            NotificationSoundOption(
+                uri = null,
+                title = getString(R.string.notification_sound_system_default),
+                sourceKey = SOUND_SOURCE_SYSTEM
+            )
+        )
+
+        try {
+            val azanFiles = app.assets.list("audio/azan").orEmpty()
+                .filter { name ->
+                    val lower = name.lowercase(Locale.US)
+                    lower.endsWith(".mp3") || lower.endsWith(".wav") || lower.endsWith(".ogg") || lower.endsWith(".m4a")
+                }
+                .sortedBy { it.lowercase(Locale.US) }
+
+            azanFiles.forEach { fileName ->
+                result.add(
+                    NotificationSoundOption(
+                        uri = "asset://audio/azan/$fileName",
+                        title = prettifyAssetName(fileName),
+                        sourceKey = SOUND_SOURCE_AZAN
+                    )
+                )
+            }
+        } catch (_: Exception) {
+            // Ignore assets read errors.
+        }
+
+        val manager = RingtoneManager(app).apply {
+            setType(RingtoneManager.TYPE_ALARM)
+        }
+        val cursor = manager.cursor
+        cursor?.use {
+            val seenUris = result.mapNotNull { option -> option.uri }.toMutableSet()
+            while (it.moveToNext()) {
+                val uri = manager.getRingtoneUri(it.position)?.toString() ?: continue
+                if (!seenUris.add(uri)) continue
+                val title = it.getString(RingtoneManager.TITLE_COLUMN_INDEX).orEmpty().ifBlank {
+                    getString(R.string.notification_sound_system_default)
+                }
+                result.add(
+                    NotificationSoundOption(
+                        uri = uri,
+                        title = title,
+                        sourceKey = SOUND_SOURCE_SYSTEM
+                    )
+                )
+            }
+        }
+
+        return result
+    }
+
+    private fun prettifyAssetName(fileName: String): String {
+        val baseName = fileName.substringBeforeLast('.')
+            .replace('_', ' ')
+            .replace('-', ' ')
+            .trim()
+        if (baseName.isBlank()) return fileName
+        return baseName.split(Regex("\\s+"))
+            .joinToString(" ") { part ->
+                part.replaceFirstChar { c ->
+                    if (c.isLowerCase()) c.titlecase(currentAppLocale()) else c.toString()
+                }
+            }
+    }
+
     private suspend fun searchCitySuggestions(query: String): List<CitySuggestion> {
         return withContext(Dispatchers.IO) {
             val queryCandidates = buildCityQueryCandidates(query)
-            val localesToTry = listOf(Locale.getDefault(), Locale.ENGLISH, Locale("ru"), Locale("kk"))
+            val localesToTry = listOf(currentAppLocale(), Locale.ENGLISH, Locale("ru"), Locale("kk"))
                 .distinctBy { it.toLanguageTag() }
 
             val suggestions = linkedMapOf<String, CitySuggestion>()
@@ -393,7 +606,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private suspend fun findByCityName(cityQuery: String): Address? {
         return withContext(Dispatchers.IO) {
             val queryCandidates = buildCityQueryCandidates(cityQuery)
-            val localesToTry = listOf(Locale.getDefault(), Locale.ENGLISH, Locale("ru"), Locale("kk"))
+            val localesToTry = listOf(currentAppLocale(), Locale.ENGLISH, Locale("ru"), Locale("kk"))
                 .distinctBy { it.toLanguageTag() }
 
             for (locale in localesToTry) {
@@ -441,7 +654,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private suspend fun resolveLocationName(lat: Double, lon: Double): String {
         return withContext(Dispatchers.IO) {
             try {
-                val geocoder = Geocoder(getApplication(), Locale.getDefault())
+                val geocoder = Geocoder(getApplication(), currentAppLocale())
                 @Suppress("DEPRECATION")
                 val addresses = geocoder.getFromLocation(lat, lon, 1)
                 val firstAddress = addresses?.firstOrNull()
@@ -455,8 +668,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private fun citySuggestionFromAddress(address: Address): CitySuggestion {
         val lat = address.latitude
         val lon = address.longitude
-        val name = buildLocationDisplayName(address, lat, lon)
-        return CitySuggestion(name, lat, lon)
+        val rawName = buildLocationDisplayName(address, lat, lon)
+        val displayName = localizeLocationName(rawName)
+        return CitySuggestion(displayName, rawName, lat, lon)
     }
 
     private fun buildLocationDisplayName(address: Address?, lat: Double, lon: Double): String {
@@ -480,7 +694,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private fun saveResolvedLocation(lat: Double, lon: Double, locationName: String) {
         prefsManager.saveLocation(lat, lon, locationName)
         _uiState.value = _uiState.value.copy(
-            locationSubtitle = locationName,
+            locationSubtitle = localizeLocationName(locationName),
             locationLatitude = formatCoordinate(lat),
             locationLongitude = formatCoordinate(lon)
         )
@@ -521,7 +735,40 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun getString(resId: Int): String {
-        return getApplication<Application>().getString(resId)
+        return getLocalizedContext().getString(resId)
+    }
+
+    private fun getString(resId: Int, vararg formatArgs: Any): String {
+        return getLocalizedContext().getString(resId, *formatArgs)
+    }
+
+    private fun normalizeAppLanguageCode(code: String): String {
+        return when (code.lowercase(Locale.US)) {
+            "kz" -> "kk"
+            "id" -> "in"
+            else -> code.lowercase(Locale.US)
+        }
+    }
+
+    private fun localizeLocationName(rawName: String): String {
+        return LocationNameLocalizer.localizeForUi(rawName, currentAppLocale())
+    }
+
+    private fun appLanguageCode(): String {
+        val raw = prefsManager.getLanguage().orEmpty()
+        val normalized = normalizeAppLanguageCode(raw)
+        return normalized.ifBlank { Locale.getDefault().language.lowercase(Locale.US) }
+    }
+
+    private fun currentAppLocale(): Locale {
+        return Locale(appLanguageCode())
+    }
+
+    private fun getLocalizedContext(): Context {
+        return FajrApp.updateBaseContextLocale(
+            getApplication<Application>(),
+            appLanguageCode()
+        )
     }
 
     companion object {
@@ -535,6 +782,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         const val OFFSET_ASR = "asr"
         const val OFFSET_MAGHRIB = "maghrib"
         const val OFFSET_ISHA = "isha"
+        const val PRAYER_DUHA = "duha"
+        const val PRAYER_TAHAJJUD = "tahajjud"
+        const val SOUND_SOURCE_SYSTEM = "system"
+        const val SOUND_SOURCE_AZAN = "azan"
         val PRAYER_OFFSET_KEYS = listOf(
             OFFSET_FAJR,
             OFFSET_SUNRISE,
@@ -542,6 +793,15 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             OFFSET_ASR,
             OFFSET_MAGHRIB,
             OFFSET_ISHA
+        )
+        val NOTIFICATION_PRAYER_KEYS = listOf(
+            OFFSET_FAJR,
+            PRAYER_DUHA,
+            OFFSET_DHUHR,
+            OFFSET_ASR,
+            OFFSET_MAGHRIB,
+            OFFSET_ISHA,
+            PRAYER_TAHAJJUD
         )
 
         fun toCalculationMethod(code: String?): CalculationMethod {

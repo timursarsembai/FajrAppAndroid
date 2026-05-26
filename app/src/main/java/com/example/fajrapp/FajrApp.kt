@@ -23,12 +23,22 @@ class FajrApp : Application() {
     }
 
     companion object {
+        private fun normalizeLanguageCode(code: String): String {
+            return when (code.lowercase(Locale.US)) {
+                "kz" -> "kk"
+                "id" -> "in"
+                else -> code.lowercase(Locale.US)
+            }
+        }
+
         fun updateBaseContextLocale(context: Context, language: String): Context {
-            val locale = Locale(language)
+            val normalized = normalizeLanguageCode(language)
+            val locale = Locale(normalized)
             Locale.setDefault(locale)
             
             val config = Configuration(context.resources.configuration)
             config.setLocale(locale)
+            config.setLayoutDirection(locale)
             
             return context.createConfigurationContext(config)
         }

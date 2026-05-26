@@ -26,10 +26,16 @@ class PreferencesManager(context: Context) {
         private const val KEY_DST_MODE = "dst_mode"
         private const val KEY_OFFSET_PREFIX = "offset_"
         private const val KEY_PRAYER_ALARMS = "prayer_alarms"
+        private const val KEY_NOTIFICATIONS_USE_SINGLE_SOUND = "notifications_use_single_sound"
+        private const val KEY_NOTIFICATIONS_GLOBAL_SOUND_URI = "notifications_global_sound_uri"
+        private const val KEY_NOTIFICATIONS_GLOBAL_SOUND_TITLE = "notifications_global_sound_title"
+        private const val KEY_NOTIFICATIONS_PRAYER_ENABLED_PREFIX = "notifications_prayer_enabled_"
+        private const val KEY_NOTIFICATIONS_PRAYER_SOUND_URI_PREFIX = "notifications_prayer_sound_uri_"
+        private const val KEY_NOTIFICATIONS_PRAYER_SOUND_TITLE_PREFIX = "notifications_prayer_sound_title_"
     }
 
     fun saveLanguage(languageCode: String) {
-        prefs.edit().putString(KEY_LANG, languageCode).apply()
+        prefs.edit().putString(KEY_LANG, languageCode).commit()
     }
 
     fun getLanguage(): String? {
@@ -70,6 +76,54 @@ class PreferencesManager(context: Context) {
 
     fun getPrayerOffsets(prayerKeys: List<String>): Map<String, Int> {
         return prayerKeys.associateWith { getPrayerOffset(it) }
+    }
+
+    fun saveNotificationsUseSingleSound(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_NOTIFICATIONS_USE_SINGLE_SOUND, enabled).apply()
+    }
+
+    fun getNotificationsUseSingleSound(): Boolean {
+        return prefs.getBoolean(KEY_NOTIFICATIONS_USE_SINGLE_SOUND, true)
+    }
+
+    fun saveNotificationsGlobalSound(uri: String?, title: String) {
+        prefs.edit()
+            .putString(KEY_NOTIFICATIONS_GLOBAL_SOUND_URI, uri ?: "")
+            .putString(KEY_NOTIFICATIONS_GLOBAL_SOUND_TITLE, title)
+            .apply()
+    }
+
+    fun getNotificationsGlobalSoundUri(): String? {
+        return prefs.getString(KEY_NOTIFICATIONS_GLOBAL_SOUND_URI, "").orEmpty().ifBlank { null }
+    }
+
+    fun getNotificationsGlobalSoundTitle(): String {
+        return prefs.getString(KEY_NOTIFICATIONS_GLOBAL_SOUND_TITLE, "").orEmpty()
+    }
+
+    fun savePrayerNotificationEnabled(prayerKey: String, enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_NOTIFICATIONS_PRAYER_ENABLED_PREFIX + prayerKey, enabled).apply()
+    }
+
+    fun getPrayerNotificationEnabled(prayerKey: String): Boolean {
+        return prefs.getBoolean(KEY_NOTIFICATIONS_PRAYER_ENABLED_PREFIX + prayerKey, true)
+    }
+
+    fun savePrayerNotificationSound(prayerKey: String, uri: String?, title: String) {
+        prefs.edit()
+            .putString(KEY_NOTIFICATIONS_PRAYER_SOUND_URI_PREFIX + prayerKey, uri ?: "")
+            .putString(KEY_NOTIFICATIONS_PRAYER_SOUND_TITLE_PREFIX + prayerKey, title)
+            .apply()
+    }
+
+    fun getPrayerNotificationSoundUri(prayerKey: String): String? {
+        return prefs.getString(KEY_NOTIFICATIONS_PRAYER_SOUND_URI_PREFIX + prayerKey, "")
+            .orEmpty()
+            .ifBlank { null }
+    }
+
+    fun getPrayerNotificationSoundTitle(prayerKey: String): String {
+        return prefs.getString(KEY_NOTIFICATIONS_PRAYER_SOUND_TITLE_PREFIX + prayerKey, "").orEmpty()
     }
 
     fun savePrayerAlarms(alarms: List<PrayerAlarm>) {

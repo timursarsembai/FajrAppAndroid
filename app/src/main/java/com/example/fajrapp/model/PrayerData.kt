@@ -6,6 +6,7 @@ data class PrayerData(
     val arabicName: String,
     val time: String,
     val timeMillis: Long,
+    val extraInfo: String? = null,
     val isNext: Boolean = false,
     val isPassed: Boolean = false
 )

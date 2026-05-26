@@ -18,6 +18,13 @@
     <string name="settings_offset_default">0 minutes</string>
     <string name="settings_offset_custom">Custom</string>
     <string name="settings_notifications_on">On</string>
+    <string name="settings_notifications_enabled_count">Enabled: %1$d of %2$d</string>
+    <string name="notification_single_sound">Single sound for all prayers</string>
+    <string name="notification_enable_label">Enable notification</string>
+    <string name="notification_sound_label">Sound</string>
+    <string name="notification_sound_system_default">System default sound</string>
+    <string name="notification_sounds_azan">Azan sounds</string>
+    <string name="notification_sounds_system">System sounds</string>
     <string name="location_use_current">Use current location</string>
     <string name="location_hint">You can use auto-detection, city search, or coordinates</string>
     <string name="location_city_title">City</string>
@@ -70,10 +77,16 @@
     <string name="calendar_prev_month">Previous month</string>
     <string name="calendar_next_month">Next month</string>
     <string name="calendar_reset_month">Current month</string>
-    <string name="calendar_holidays_title">Islamic holidays for this Hijri year</string>
-    <string name="calendar_holiday_eid_al_fitr">Eid al-Fitr (Oraza Ait, Oraza Bayram)</string>
-    <string name="calendar_holiday_eid_al_adha">Eid al-Adha (Qurban Ait, Qurban Bayram)</string>
-    <string name="calendar_holiday_line_format">%1$s: %2$d %3$s %4$d / %5$s</string>
+    <string name="calendar_holidays_title">Islamic holidays (%1$s/%2$s)</string>
+    <string name="calendar_holiday_eid_al_fitr_translit">Id al-Fitr</string>
+    <string name="calendar_holiday_eid_al_fitr_arabic">عيد الفطر</string>
+    <string name="calendar_holiday_eid_al_fitr_aliases">(Oraza Ait, Oraza Bayram)</string>
+    <string name="calendar_holiday_eid_al_adha_translit">Id al-Adha</string>
+    <string name="calendar_holiday_eid_al_adha_arabic">عيد الأضحى</string>
+    <string name="calendar_holiday_eid_al_adha_aliases">(Qurban Ait, Qurban Bayram)</string>
+    <string name="calendar_holiday_title_line">%1$s (%2$s)</string>
+    <string name="calendar_holiday_dates_line">%1$s / %2$s</string>
+    <string name="calendar_holiday_tashriq_dates_line">Tashriq days (3 days): %1$s / %2$s</string>
     <string name="alarm_title">Prayer alarms</string>
     <string name="alarm_create_title">Create alarm</string>
     <string name="alarm_edit_title">Edit alarm</string>
@@ -111,6 +124,7 @@
     <string name="prayer_maghrib">Maghrib</string>
     <string name="prayer_isha">Isha</string>
     <string name="prayer_tahajjud">Tahajjud</string>
+    <string name="prayer_duha_explanation_format">Calculated sunrise time is %1$s. Adding 20 minutes gives the start of Duha time: %2$s. According to Sunnah, it is preferable to delay Duha and pray it roughly 1.5-2 hours before Dhuhr, approximately in the range %3$s-%4$s.</string>
     
     <!-- Hijri Months -->
     <string name="hijri_muharram">Muharram</string>

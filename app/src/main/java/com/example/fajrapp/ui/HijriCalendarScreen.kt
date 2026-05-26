@@ -18,8 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Refresh
@@ -46,8 +49,6 @@ import dev.chrisbanes.haze.HazeState
 import java.time.DateTimeException
 import java.time.LocalDate
 import java.time.chrono.HijrahDate
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
@@ -62,7 +63,8 @@ enum class IslamicHolidayType(val hijriMonth: Int, val hijriDay: Int) {
 data class IslamicHolidayInfo(
     val type: IslamicHolidayType,
     val hijriYear: Int,
-    val gregorianDate: LocalDate
+    val gregorianDate: LocalDate,
+    val celebrationDates: List<LocalDate>
 )
 
 data class CalendarDayCell(
@@ -92,6 +94,7 @@ fun HijriCalendarScreen(
     }
 
     val locale = Locale.getDefault()
+    val isArabicUi = locale.language.equals("ar", ignoreCase = true)
     var monthOffset by rememberSaveable { mutableIntStateOf(0) }
 
     val baseMonthStart = remember {
@@ -104,6 +107,9 @@ fun HijriCalendarScreen(
             locale = locale
         )
     }
+    val selectedHijriYearGregorianLabel = remember(visibleMonthData.hijriYear) {
+        buildGregorianYearLabelForHijriYear(visibleMonthData.hijriYear)
+    }
 
     val weekDays = listOf(
         stringResource(R.string.calendar_week_mon),
@@ -114,12 +120,14 @@ fun HijriCalendarScreen(
         stringResource(R.string.calendar_week_sat),
         stringResource(R.string.calendar_week_sun)
     )
+    val pageScrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
+            .verticalScroll(pageScrollState)
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
         Row(
@@ -169,7 +177,7 @@ fun HijriCalendarScreen(
                 text = stringResource(
                     R.string.calendar_year_format,
                     visibleMonthData.hijriYear,
-                    visibleMonthData.gregorianYearLabel
+                    selectedHijriYearGregorianLabel
                 ),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
@@ -185,10 +193,21 @@ fun HijriCalendarScreen(
             monthData = visibleMonthData,
             weekDays = weekDays,
             hazeState = hazeState,
+            isArabicUi = isArabicUi,
             isCurrentMonth = monthOffset == 0,
             onPreviousMonth = { monthOffset -= 1 },
             onNextMonth = { monthOffset += 1 },
             onResetToCurrent = { monthOffset = 0 }
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        HolidayInfoBlock(
+            holidays = visibleMonthData.holidays,
+            hijriYearLabel = visibleMonthData.hijriYear.toString(),
+            gregorianYearLabel = selectedHijriYearGregorianLabel,
+            isArabicUi = isArabicUi,
+            hazeState = hazeState
         )
     }
 }
@@ -239,6 +258,7 @@ private fun MonthCalendarCard(
     monthData: CalendarMonthData,
     weekDays: List<String>,
     hazeState: HazeState,
+    isArabicUi: Boolean,
     isCurrentMonth: Boolean,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
@@ -278,18 +298,25 @@ private fun MonthCalendarCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    val monthTitle = if (isArabicUi) {
+                        getHijriMonthArabicName(monthData.hijriMonth)
+                    } else {
+                        getHijriMonthName(monthData.hijriMonth)
+                    }
                     Text(
-                        text = getHijriMonthName(monthData.hijriMonth),
+                        text = monthTitle,
                         color = if (isCurrentMonth) Color(0xFFFFF3C4) else Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = "(${getHijriMonthArabicName(monthData.hijriMonth)})",
-                        color = Color.White.copy(alpha = 0.85f),
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(top = 1.dp)
-                    )
+                    if (!isArabicUi) {
+                        Text(
+                            text = "(${getHijriMonthArabicName(monthData.hijriMonth)})",
+                            color = Color.White.copy(alpha = 0.85f),
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(top = 1.dp)
+                        )
+                    }
                     Text(
                         text = "(${monthData.gregorianMonthLabel})",
                         color = Color.White.copy(alpha = 0.75f),
@@ -344,13 +371,6 @@ private fun MonthCalendarCard(
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            HolidayInfoBlock(
-                holidays = monthData.holidays,
-                hazeState = hazeState
-            )
         }
     }
 }
@@ -447,12 +467,12 @@ private fun RowScope.CalendarDayCellView(
 @Composable
 private fun HolidayInfoBlock(
     holidays: List<IslamicHolidayInfo>,
+    hijriYearLabel: String,
+    gregorianYearLabel: String,
+    isArabicUi: Boolean,
     hazeState: HazeState
 ) {
     val locale = Locale.getDefault()
-    val gregorianFormatter = remember(locale) {
-        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
-    }
 
     GlassContainer(
         cornerRadius = 14.dp,
@@ -466,33 +486,133 @@ private fun HolidayInfoBlock(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = stringResource(R.string.calendar_holidays_title),
+                text = stringResource(
+                    R.string.calendar_holidays_title,
+                    hijriYearLabel,
+                    gregorianYearLabel
+                ),
                 color = Color(0xFFFFE7A3),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp
             )
 
             holidays.forEach { holiday ->
-                val title = when (holiday.type) {
-                    IslamicHolidayType.EID_AL_FITR -> stringResource(R.string.calendar_holiday_eid_al_fitr)
-                    IslamicHolidayType.EID_AL_ADHA -> stringResource(R.string.calendar_holiday_eid_al_adha)
+                val (translitName, arabicName, aliases) = when (holiday.type) {
+                    IslamicHolidayType.EID_AL_FITR -> Triple(
+                        stringResource(R.string.calendar_holiday_eid_al_fitr_translit),
+                        stringResource(R.string.calendar_holiday_eid_al_fitr_arabic),
+                        stringResource(R.string.calendar_holiday_eid_al_fitr_aliases)
+                    )
+                    IslamicHolidayType.EID_AL_ADHA -> Triple(
+                        stringResource(R.string.calendar_holiday_eid_al_adha_translit),
+                        stringResource(R.string.calendar_holiday_eid_al_adha_arabic),
+                        stringResource(R.string.calendar_holiday_eid_al_adha_aliases)
+                    )
                 }
-                val hijriMonthName = getHijriMonthName(holiday.type.hijriMonth)
-                val gregorianDateText = holiday.gregorianDate.format(gregorianFormatter)
+                val primaryDates = if (
+                    holiday.type == IslamicHolidayType.EID_AL_ADHA &&
+                    holiday.celebrationDates.isNotEmpty()
+                ) {
+                    listOf(holiday.celebrationDates.first())
+                } else {
+                    holiday.celebrationDates
+                }
 
-                Text(
-                    text = stringResource(
-                        R.string.calendar_holiday_line_format,
-                        title,
-                        holiday.type.hijriDay,
-                        hijriMonthName,
-                        holiday.hijriYear,
-                        gregorianDateText
-                    ),
-                    color = Color.White.copy(alpha = 0.9f),
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp
+                val hijriDateText = formatHijriCelebrationDateRange(
+                    dates = primaryDates,
+                    isArabicUi = isArabicUi
                 )
+                val gregorianDateText = formatGregorianCelebrationDateRange(
+                    dates = primaryDates,
+                    locale = locale
+                )
+                val datesLine = stringResource(
+                    R.string.calendar_holiday_dates_line,
+                    hijriDateText,
+                    gregorianDateText
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = Color.White.copy(alpha = 0.08f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color.White.copy(alpha = 0.22f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Text(
+                        text = if (isArabicUi) arabicName else stringResource(
+                            R.string.calendar_holiday_title_line,
+                            translitName,
+                            arabicName
+                        ),
+                        color = Color(0xFFFFE7A3),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = aliases,
+                        color = Color.White.copy(alpha = 0.88f),
+                        fontSize = 11.sp
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.92f),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = datesLine,
+                            color = Color.White.copy(alpha = 0.92f),
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    if (holiday.type == IslamicHolidayType.EID_AL_ADHA && holiday.celebrationDates.size >= 4) {
+                        val tashriqDates = holiday.celebrationDates.drop(1)
+                        val tashriqHijri = formatHijriCelebrationDateRange(
+                            dates = tashriqDates,
+                            isArabicUi = isArabicUi
+                        )
+                        val tashriqGregorian = formatGregorianCelebrationDateRange(
+                            dates = tashriqDates,
+                            locale = locale
+                        )
+                        val tashriqLine = stringResource(
+                            R.string.calendar_holiday_tashriq_dates_line,
+                            tashriqHijri,
+                            tashriqGregorian
+                        )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = null,
+                                tint = Color.White.copy(alpha = 0.9f),
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = tashriqLine,
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -507,7 +627,9 @@ private fun buildMonthData(
     val monthLength = monthStart.lengthOfMonth()
     val firstWeekDay = LocalDate.from(monthStart).dayOfWeek.value - 1 // Monday = 0
     val holidays = buildIslamicHolidaysForYear(hijriYear)
-    val holidayByMonthAndDay = holidays.associateBy { it.type.hijriMonth to it.type.hijriDay }
+    val holidayByGregorianDate = holidays
+        .flatMap { holiday -> holiday.celebrationDates.map { date -> date to holiday.type } }
+        .toMap()
 
     val firstGregorian = LocalDate.from(monthStart)
     val lastGregorian = LocalDate.from(monthStart.with(ChronoField.DAY_OF_MONTH, monthLength.toLong()))
@@ -525,7 +647,7 @@ private fun buildMonthData(
         val hijriDate = monthStart.with(ChronoField.DAY_OF_MONTH, day.toLong())
         val gregDate = LocalDate.from(hijriDate)
         val isToday = hijriDate == todayHijri
-        val holidayType = holidayByMonthAndDay[hijriMonth to day]?.type
+        val holidayType = holidayByGregorianDate[gregDate]
 
         cells.add(
             CalendarDayCell(
@@ -557,16 +679,93 @@ private fun buildIslamicHolidaysForYear(hijriYear: Int): List<IslamicHolidayInfo
         .mapNotNull { holidayType ->
             try {
                 val hijriDate = HijrahDate.of(hijriYear, holidayType.hijriMonth, holidayType.hijriDay)
+                val baseGregorianDate = LocalDate.from(hijriDate)
+                val celebrationStart = baseGregorianDate
+                val celebrationDuration = when (holidayType) {
+                    IslamicHolidayType.EID_AL_FITR -> 1
+                    IslamicHolidayType.EID_AL_ADHA -> 4
+                }
+                val celebrationDates = List(celebrationDuration) { index ->
+                    celebrationStart.plusDays(index.toLong())
+                }
                 IslamicHolidayInfo(
                     type = holidayType,
                     hijriYear = hijriYear,
-                    gregorianDate = LocalDate.from(hijriDate)
+                    gregorianDate = baseGregorianDate,
+                    celebrationDates = celebrationDates
                 )
             } catch (_: DateTimeException) {
                 null
             }
         }
         .sortedBy { it.gregorianDate }
+}
+
+private fun formatGregorianCelebrationDateRange(
+    dates: List<LocalDate>,
+    locale: Locale
+): String {
+    if (dates.isEmpty()) return ""
+    val sortedDates = dates.sorted()
+    val start = sortedDates.first()
+    val end = sortedDates.last()
+
+    val monthNameStart = start.month.getDisplayName(TextStyle.FULL, locale)
+    val monthNameEnd = end.month.getDisplayName(TextStyle.FULL, locale)
+
+    return when {
+        start == end -> "${start.dayOfMonth} $monthNameStart ${start.year}"
+        start.year == end.year && start.month == end.month ->
+            "${start.dayOfMonth}-${end.dayOfMonth} $monthNameStart ${start.year}"
+        start.year == end.year ->
+            "${start.dayOfMonth} $monthNameStart - ${end.dayOfMonth} $monthNameEnd ${start.year}"
+        else ->
+            "${start.dayOfMonth} $monthNameStart ${start.year} - ${end.dayOfMonth} $monthNameEnd ${end.year}"
+    }
+}
+
+@Composable
+private fun formatHijriCelebrationDateRange(
+    dates: List<LocalDate>,
+    isArabicUi: Boolean
+): String {
+    if (dates.isEmpty()) return ""
+
+    val hijriDates = dates.sorted().map { date -> HijrahDate.from(date) }
+    val start = hijriDates.first()
+    val end = hijriDates.last()
+    val startDay = start.get(ChronoField.DAY_OF_MONTH)
+    val endDay = end.get(ChronoField.DAY_OF_MONTH)
+    val startMonth = start.get(ChronoField.MONTH_OF_YEAR)
+    val endMonth = end.get(ChronoField.MONTH_OF_YEAR)
+    val startYear = start.get(ChronoField.YEAR)
+    val endYear = end.get(ChronoField.YEAR)
+
+    val startMonthName = if (isArabicUi) {
+        getHijriMonthArabicName(startMonth)
+    } else {
+        getHijriMonthName(startMonth)
+    }
+    val endMonthName = if (isArabicUi) {
+        getHijriMonthArabicName(endMonth)
+    } else {
+        getHijriMonthName(endMonth)
+    }
+
+    return when {
+        hijriDates.size == 1 -> {
+            "${startDay} $startMonthName $startYear"
+        }
+        startYear == endYear && startMonth == endMonth -> {
+            "${startDay}-${endDay} $startMonthName $startYear"
+        }
+        startYear == endYear -> {
+            "${startDay} $startMonthName - ${endDay} $endMonthName $startYear"
+        }
+        else -> {
+            "${startDay} $startMonthName $startYear - ${endDay} $endMonthName $endYear"
+        }
+    }
 }
 
 private fun buildGregorianMonthLabel(start: LocalDate, end: LocalDate, locale: Locale): String {
@@ -608,6 +807,23 @@ private fun buildGregorianYearLabel(start: LocalDate, end: LocalDate): String {
         start.year.toString()
     } else {
         "${start.year}-${end.year}"
+    }
+}
+
+private fun buildGregorianYearLabelForHijriYear(hijriYear: Int): String {
+    return try {
+        val hijriYearStart = HijrahDate.of(hijriYear, 1, 1)
+        val hijriYearLastMonthStart = HijrahDate.of(hijriYear, 12, 1)
+        val hijriYearEnd = hijriYearLastMonthStart.with(
+            ChronoField.DAY_OF_MONTH,
+            hijriYearLastMonthStart.lengthOfMonth().toLong()
+        )
+
+        val startYear = LocalDate.from(hijriYearStart).year
+        val endYear = LocalDate.from(hijriYearEnd).year
+        if (startYear == endYear) startYear.toString() else "$startYear-$endYear"
+    } catch (_: DateTimeException) {
+        ""
     }
 }
 

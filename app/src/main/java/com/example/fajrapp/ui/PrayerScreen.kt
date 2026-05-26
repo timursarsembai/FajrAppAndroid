@@ -1,4 +1,4 @@
-﻿package com.example.fajrapp.ui
+package com.example.fajrapp.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
@@ -39,6 +39,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -58,6 +60,7 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun PrayerScreen(
     viewModel: PrayerViewModel = viewModel(),
+    appLanguageCode: String,
     hazeState: HazeState,
     onSettingsClick: () -> Unit,
     onCalendarClick: () -> Unit,
@@ -65,6 +68,15 @@ fun PrayerScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val expandedStates = remember { mutableStateMapOf<String, Boolean>() }
+    val normalizedLanguageCode = remember(appLanguageCode) {
+        when (appLanguageCode.lowercase(Locale.US)) {
+            "kz" -> "kk"
+            "id" -> "in"
+            else -> appLanguageCode.lowercase(Locale.US)
+        }
+    }
+    val currentLocale = remember(normalizedLanguageCode) { Locale(normalizedLanguageCode) }
+    val isArabicUi = normalizedLanguageCode == "ar"
 
     BoxWithConstraints(
         modifier = Modifier
@@ -117,6 +129,7 @@ fun PrayerScreen(
                     ) {
                         Column(
                             modifier = Modifier
+                                .semantics { contentDescription = "Open Calendar" }
                                 .clickable { onCalendarClick() }
                                 .padding(horizontal = 13.dp * scale, vertical = 8.dp * scale)
                         ) {
@@ -158,6 +171,7 @@ fun PrayerScreen(
                 GlassContainer(
                     modifier = Modifier
                         .padding(bottom = 24.dp * scale)
+                        .semantics { contentDescription = "Open Alarms" }
                         .clickable { onClockClick() },
                     cornerRadius = timerCornerRadius,
                     hazeState = hazeState,
@@ -167,7 +181,7 @@ fun PrayerScreen(
                         modifier = Modifier.padding(horizontal = 28.dp * scale, vertical = 14.dp * scale),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        LiveClockText(fontSize = timerFontSize)
+                        LiveClockText(fontSize = timerFontSize, locale = currentLocale)
                         Spacer(modifier = Modifier.height(6.dp * scale))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -206,6 +220,8 @@ fun PrayerScreen(
                         titleSize = titleSize,
                         timeSize = timeSize,
                         scale = itemScale,
+                        locale = currentLocale,
+                        isArabicUi = isArabicUi,
                         hazeState = hazeState,
                         isExpanded = isExpanded,
                         onToggleExpand = { expandedStates[prayer.key] = !isExpanded },
@@ -225,6 +241,8 @@ private fun PrayerItem(
     titleSize: TextUnit,
     timeSize: TextUnit,
     scale: Float,
+    locale: Locale,
+    isArabicUi: Boolean,
     hazeState: HazeState,
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
@@ -239,6 +257,7 @@ private fun PrayerItem(
     val checkMarkSpacer = 12.dp * scale
     val timeLeftSize = (14 * scale).sp
     val arabicSize = (16 * scale).sp
+    val displayName = if (isArabicUi) prayer.arabicName else prayer.name
 
     GlassContainer(
         modifier = modifier.then(
@@ -294,16 +313,18 @@ private fun PrayerItem(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = prayer.name,
+                        text = displayName,
                         color = if (prayer.isNext) highlightColor else Color.White,
                         fontSize = titleSize,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = prayer.arabicName,
-                        color = Color.White.copy(alpha = 0.6f),
-                        fontSize = arabicSize
-                    )
+                    if (!isArabicUi) {
+                        Text(
+                            text = prayer.arabicName,
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontSize = arabicSize
+                        )
+                    }
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
@@ -317,6 +338,7 @@ private fun PrayerItem(
                         NextPrayerCountdownText(
                             targetTimeMillis = prayer.timeMillis,
                             timerPrefix = timerPrefix,
+                            locale = locale,
                             fontSize = timeLeftSize
                         )
                     }
@@ -337,13 +359,21 @@ private fun PrayerItem(
                         .padding(start = internalPadding, end = internalPadding, bottom = internalPadding),
                     verticalArrangement = Arrangement.spacedBy(8.dp * scale)
                 ) {
+                    prayer.extraInfo?.let { infoText ->
+                        Text(
+                            text = infoText,
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = (12 * scale).sp,
+                            lineHeight = (16 * scale).sp
+                        )
+                    }
                     LessonButton(
                         text = stringResource(R.string.lesson_wudu),
                         hazeState = hazeState,
                         scale = scale
                     )
                     LessonButton(
-                        text = stringResource(R.string.lesson_prayer_format, prayer.name),
+                        text = stringResource(R.string.lesson_prayer_format, displayName),
                         hazeState = hazeState,
                         scale = scale
                     )
@@ -354,9 +384,12 @@ private fun PrayerItem(
 }
 
 @Composable
-private fun LiveClockText(fontSize: TextUnit) {
-    val value by produceState(initialValue = "00:00:00") {
-        val formatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+private fun LiveClockText(
+    fontSize: TextUnit,
+    locale: Locale
+) {
+    val value by produceState(initialValue = "00:00:00", key1 = locale.toLanguageTag()) {
+        val formatter = SimpleDateFormat("HH:mm:ss", locale)
         while (true) {
             value = formatter.format(Date())
             delay(1000L)
@@ -374,9 +407,15 @@ private fun LiveClockText(fontSize: TextUnit) {
 private fun NextPrayerCountdownText(
     targetTimeMillis: Long,
     timerPrefix: String,
+    locale: Locale,
     fontSize: TextUnit
 ) {
-    val value by produceState(initialValue = "$timerPrefix --:--:--", key1 = targetTimeMillis, key2 = timerPrefix) {
+    val value by produceState(
+        initialValue = "$timerPrefix --:--:--",
+        key1 = targetTimeMillis,
+        key2 = timerPrefix,
+        key3 = locale.toLanguageTag()
+    ) {
         while (true) {
             var diffMillis = targetTimeMillis - System.currentTimeMillis()
             if (diffMillis < 0L) diffMillis = 0L
@@ -388,7 +427,7 @@ private fun NextPrayerCountdownText(
             val seconds = TimeUnit.MILLISECONDS.toSeconds(diffMillis)
 
             value = String.format(
-                Locale.getDefault(),
+                locale,
                 "$timerPrefix %02d:%02d:%02d",
                 hours,
                 minutes,
@@ -431,3 +470,6 @@ private fun LessonButton(
         }
     }
 }
+
+
+

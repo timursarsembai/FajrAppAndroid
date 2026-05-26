@@ -18,7 +18,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import com.example.fajrapp.ui.components.GlassContainer
+import com.example.fajrapp.viewmodel.Language
 import com.example.fajrapp.viewmodel.SettingsViewModel
 import dev.chrisbanes.haze.HazeState
 import androidx.compose.ui.res.stringResource
@@ -28,7 +32,8 @@ import com.example.fajrapp.R
 fun LanguageSelectionScreen(
     viewModel: SettingsViewModel,
     hazeState: HazeState,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onLanguageSelected: (Language) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -78,7 +83,9 @@ fun LanguageSelectionScreen(
 
         // Language List
         LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("LanguageList"),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(viewModel.availableLanguages) { language ->
@@ -87,13 +94,18 @@ fun LanguageSelectionScreen(
                 GlassContainer(
                     cornerRadius = 20.dp,
                     hazeState = hazeState,
-                    modifier = Modifier.fillMaxWidth().height(64.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .semantics { contentDescription = "lang_${language.code}" }
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .clickable { 
-                                viewModel.setLanguage(language)
+                            .clickable {
+                                if (!isSelected) {
+                                    onLanguageSelected(language)
+                                }
                             }
                             .padding(horizontal = 20.dp),
                         verticalAlignment = Alignment.CenterVertically

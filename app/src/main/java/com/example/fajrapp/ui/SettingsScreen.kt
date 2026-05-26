@@ -32,6 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,7 +50,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onLanguageClick: () -> Unit,
     onLocationClick: () -> Unit,
-    onCalculationMethodClick: () -> Unit
+    onCalculationMethodClick: () -> Unit,
+    onNotificationsClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -107,6 +110,7 @@ fun SettingsScreen(
                 title = stringResource(R.string.settings_language),
                 subtitle = uiState.selectedLanguage.nativeName,
                 hazeState = hazeState,
+                itemContentDescription = "Open Language Selection",
                 onClick = onLanguageClick
             )
             SettingsItem(
@@ -130,8 +134,9 @@ fun SettingsScreen(
             SettingsItem(
                 icon = Icons.Default.Notifications,
                 title = stringResource(R.string.settings_notifications),
-                subtitle = stringResource(R.string.settings_notifications_on),
-                hazeState = hazeState
+                subtitle = uiState.notificationsSummary,
+                hazeState = hazeState,
+                onClick = onNotificationsClick
             )
         }
 
@@ -152,6 +157,7 @@ fun SettingsItem(
     title: String,
     subtitle: String,
     hazeState: HazeState,
+    itemContentDescription: String? = null,
     onClick: () -> Unit = {}
 ) {
     GlassContainer(
@@ -164,6 +170,13 @@ fun SettingsItem(
         Row(
             modifier = Modifier
                 .fillMaxSize()
+                .then(
+                    if (itemContentDescription != null) {
+                        Modifier.semantics { contentDescription = itemContentDescription }
+                    } else {
+                        Modifier
+                    }
+                )
                 .clickable { onClick() }
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically

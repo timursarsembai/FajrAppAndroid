@@ -753,3 +753,779 @@
   - `CHANGELOG_AGENT.md`
 - Verification:
   - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: move holidays block below month card and redesign holiday details format
+- Status: completed
+- What was done:
+  - Moved holiday information block outside the month card; it is now rendered as a separate block under the calendar grid section.
+  - Updated holiday text structure for each holiday entry to match requested format:
+    - first line: transliterated Cyrillic holiday name + Arabic name in parentheses,
+    - second line: aliases in parentheses (e.g., Oraza Ait/Bayram),
+    - third line: dates (Hijri and Gregorian).
+  - Kept two holidays listed separately in one common holidays block.
+  - Preserved holiday date highlighting in month grid while month navigation changes.
+  - Updated RU/EN string resources with separate fields for translit name, Arabic name, aliases, and date/title line templates.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: shorten holidays header and show Hijri/Gregorian years in title
+- Status: completed
+- What was done:
+  - Updated holidays block header text format to short form with both calendars:
+    - RU: `Исламские праздники (год по хиджре/год по миляди)` style with real year values.
+  - Implemented dynamic header values:
+    - Hijri year from current holiday dataset,
+    - Gregorian year label as single year or range (`YYYY-YYYY`) when needed.
+  - Updated EN localization format similarly to keep string placeholders consistent.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `app/src/main/res/values/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: adjust holiday highlight logic to celebration days (+1 day; Eid al-Adha 3 days)
+- Status: completed
+- What was done:
+  - Updated calendar holiday highlight behavior in grid:
+    - both Eid holidays are now highlighted starting from `base date + 1 day`,
+    - Eid al-Fitr highlights 1 day,
+    - Eid al-Adha highlights 3 days in a row.
+  - Switched highlight matching from Hijri month/day to Gregorian celebration dates, so highlighted cells follow real display dates in month grid.
+  - Updated holiday info block date output to show celebration day/range (the same dates used for grid highlighting).
+  - Updated holidays year label calculation to use celebration dates (Gregorian year/range consistency).
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: restore vertical scrolling on calendar page
+- Status: completed
+- What was done:
+  - Fixed missing page scroll after calendar layout expansion.
+  - Added vertical scrolling to the root calendar screen container so lower content (including holidays block) is reachable on smaller screens.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: simplify holidays header format text
+- Status: completed
+- What was done:
+  - Updated holidays block title format to compact year representation:
+    - `Исламские праздники (XXXX/YYYY)`.
+  - Applied same compact placeholder style for EN localization for consistency.
+- Changed files:
+  - `app/src/main/res/values-ru/strings.xml`
+  - `app/src/main/res/values/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: add calendar icon to holiday dates and show Hijri range for multi-day Eid
+- Status: completed
+- What was done:
+  - Added white calendar icon at the beginning of the dates line in each holiday card (unified style).
+  - Fixed holiday dates text composition:
+    - dates line now takes two prepared strings: Hijri date/range and Gregorian date/range.
+  - Implemented Hijri celebration range formatter based on actual celebration days:
+    - single-day output for Eid al-Fitr,
+    - range output for Eid al-Adha (e.g., `10-12 Зуль-Хиджа 1447`) when celebration spans multiple days.
+  - Kept Gregorian range formatting for multi-day celebration dates.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `app/src/main/res/values/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: add dynamic Duha explanation text in expanded dropdown on home screen
+- Status: completed
+- What was done:
+  - Extended `PrayerData` with optional `extraInfo` field for expandable contextual explanation.
+  - Added Duha-specific dynamic explanation generation in `PrayerViewModel`:
+    - calculated sunrise time,
+    - Duha start as sunrise + 20 minutes,
+    - recommended Sunnah range as ~1.5-2 hours before Dhuhr.
+  - Ensured explanation uses current offsets/DST-adjusted visible times.
+  - Displayed `extraInfo` text inside expanded prayer card before lesson buttons.
+  - Added RU/EN localized string template for Duha explanation text.
+  - Added formatted `getString` overload in ViewModel for placeholder-based resources.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/model/PrayerData.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/PrayerScreen.kt`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `app/src/main/res/values/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: compact Gregorian holiday range formatting in holidays block
+- Status: completed
+- What was done:
+  - Updated Gregorian celebration range rendering in holidays block:
+    - same month/year now shown as compact range: `28-30 мая 2026`,
+    - no duplicated month/year and no `г.` suffix in this compact format.
+  - Kept full fallback formatting for cross-month and cross-year ranges.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: fix calendar top year block so Gregorian year updates with selected Hijri year
+- Status: completed
+- What was done:
+  - Fixed top calendar year badge logic:
+    - Gregorian year label is now calculated from the full selected Hijri year (1 Muharram to end of Dhu al-Hijjah),
+    - not from only the currently visible month.
+  - Added dedicated helper to compute Gregorian year or year-range for a Hijri year.
+  - Updated UI to use this new dynamic value in the top year block.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: sync holidays header years with top calendar year logic (XXXX/YYYY-YYYY)
+- Status: completed
+- What was done:
+  - Updated holidays block header to use the same year values as the top year block:
+    - Hijri year from selected calendar year,
+    - Gregorian year/year-range calculated for the full selected Hijri year.
+  - Removed independent holidays-header year calculation to avoid mismatches.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: implement Notifications settings page with single/per-prayer sound modes and sound picker pages
+- Status: completed
+- What was done:
+  - Added full Notifications settings flow:
+    - top switch `Один звук для всех намазов`,
+    - global `Звук` item when single-sound mode is enabled,
+    - per-prayer settings when single-sound mode is disabled for:
+      `Фаджр, Духа, Зухр, Аср, Магриб, Иша, Тахаджуд`,
+    - each prayer card includes explicit switch label `Включить уведомление`,
+    - each prayer card includes its own `Звук` item.
+  - Added dedicated sound picker page:
+    - grouped sources: Azan sounds + system sounds,
+    - selection applies to global target or a specific prayer target.
+  - Added sound sources integration in `SettingsViewModel`:
+    - reads azan files from `assets/audio/azan`,
+    - reads standard device alarm sounds via `RingtoneManager`.
+  - Added persistent storage in `PreferencesManager` for:
+    - single/global sound mode,
+    - global sound selection,
+    - per-prayer enabled flag,
+    - per-prayer sound selection.
+  - Extended `SettingsUiState` with notifications fields and summary label.
+  - Wired navigation routes in `MainActivity`:
+    - `notifications`,
+    - `notifications_sound/{targetKey}`.
+  - Connected notifications row tap on Settings main screen.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/data/PreferencesManager.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/SettingsScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/NotificationsSettingsScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `app/src/main/res/values/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: localization phase 1 - enable full locale resource coverage for all configured app languages
+- Status: completed
+- What was done:
+  - Added Android resource locale folders for all languages present in app language settings:
+    - `values-kk`, `values-es`, `values-ar`, `values-in`, `values-ms`, `values-ur`,
+      `values-hi`, `values-uz`, `values-ky`, `values-tt`, `values-fa`, `values-tg`, `values-fr`.
+  - Initialized `strings.xml` in each new locale folder with the full key set from base resources.
+  - Verified key parity across all locale files:
+    - each locale has `128` keys,
+    - `missing=0`, `extra=0` for every locale.
+  - Confirmed Arabic holiday strings in base resources are stored with valid Arabic Unicode characters.
+  - Note: this phase ensures technical localization support and full key coverage. Per-language translation quality/content refinement is the next phase.
+- Changed files:
+  - `app/src/main/res/values-ar/strings.xml`
+  - `app/src/main/res/values-es/strings.xml`
+  - `app/src/main/res/values-fa/strings.xml`
+  - `app/src/main/res/values-fr/strings.xml`
+  - `app/src/main/res/values-hi/strings.xml`
+  - `app/src/main/res/values-in/strings.xml`
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-ms/strings.xml`
+  - `app/src/main/res/values-tg/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `app/src/main/res/values-ur/strings.xml`
+  - `app/src/main/res/values-uz/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - Locale parity check: all locale files `keys=128, missing=0, extra=0`
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: localization phase 2 - translate core UI strings for all configured locales
+- Status: completed
+- What was done:
+  - Applied primary UI translations for all added locales:
+    - `ar, es, fa, fr, hi, in, kk, ky, ms, tg, tt, ur, uz`.
+  - Localized key user-visible strings for core flows:
+    - Settings section titles and key labels,
+    - Notifications key labels (single sound / enable notification / sound categories),
+    - Calendar basic labels (title and month navigation badges),
+    - Alarm basic labels (screen titles and empty state),
+    - Common loading/timer prefix labels,
+    - Main prayer names.
+  - Preserved full key parity (`128` keys per locale file) after localization edits.
+- Changed files:
+  - `app/src/main/res/values-ar/strings.xml`
+  - `app/src/main/res/values-es/strings.xml`
+  - `app/src/main/res/values-fa/strings.xml`
+  - `app/src/main/res/values-fr/strings.xml`
+  - `app/src/main/res/values-hi/strings.xml`
+  - `app/src/main/res/values-in/strings.xml`
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-ms/strings.xml`
+  - `app/src/main/res/values-tg/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `app/src/main/res/values-ur/strings.xml`
+  - `app/src/main/res/values-uz/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - Locale parity check: all locale files `missing=0, extra=0`
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: localization continuation - stabilize locale resources and apply safe translation subset
+- Status: completed
+- What was done:
+  - Continued localization rollout and validated resource parity for all locale files (`missing=0`, `extra=0`).
+  - During expansion of translations, detected a locale encoding issue that caused broken resource values and build failures in `aapt` (`resource attr/... not found`).
+  - Stabilized locale resources by regenerating all added locale files from base `values/strings.xml` to remove corrupted entries.
+  - Reapplied a safe UTF-8 translation subset (without resource-breaking sequences) for:
+    - `values-es` (Spanish),
+    - `values-fr` (French),
+    - `values-in` (Indonesian),
+    - `values-ms` (Malay).
+  - Localized in these 4 locales key UI groups:
+    - settings section titles,
+    - location helper/error texts,
+    - time offset hint/format,
+    - calendar weekday labels and holidays title,
+    - alarm before/after/minutes/repeat/notification/channel labels,
+    - dua footer.
+  - Left remaining locales with clean English fallback resources for now to keep the app stable and buildable while continuing staged translation in next steps.
+- Changed files:
+  - `app/src/main/res/values-ar/strings.xml`
+  - `app/src/main/res/values-es/strings.xml`
+  - `app/src/main/res/values-fa/strings.xml`
+  - `app/src/main/res/values-fr/strings.xml`
+  - `app/src/main/res/values-hi/strings.xml`
+  - `app/src/main/res/values-in/strings.xml`
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-ms/strings.xml`
+  - `app/src/main/res/values-tg/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `app/src/main/res/values-ur/strings.xml`
+  - `app/src/main/res/values-uz/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - Locale parity check: all locale files `missing=0`, `extra=0`, `total=128`.
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: calendar holidays - remove +1 day shift for Eid celebration dates
+- Status: completed
+- What was done:
+  - Removed the `+1 day` offset from Islamic holiday celebration start date in calendar logic.
+  - Now both holidays start on their actual Hijri/Gregorian converted date:
+    - Eid al-Fitr: 1 day starting from 1 Shawwal date,
+    - Eid al-Adha: 3 days starting from 10 Dhu al-Hijjah date.
+  - As a result, grid highlight and holiday info block dates are no longer shifted by one day.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: localization continuation - safe wave for ar/fa/hi/ur/kk/ky/tg/tt/uz
+- Status: completed
+- What was done:
+  - Continued staged localization with safe small batches and build verification after each batch.
+  - Applied translations for a core shared keyset (settings section labels, location labels/errors, time offset texts, calendar weekday labels/title, holidays title, alarm core labels/formats, footer dua) in:
+    - `values-kk`, `values-ky`, `values-uz`
+    - `values-tg`, `values-tt`
+    - `values-ar`
+    - `values-fa`, `values-ur`
+    - `values-hi`
+  - Kept resource structure intact for all locales (no missing/extra keys).
+- Changed files:
+  - `app/src/main/res/values-ar/strings.xml`
+  - `app/src/main/res/values-fa/strings.xml`
+  - `app/src/main/res/values-hi/strings.xml`
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-tg/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `app/src/main/res/values-ur/strings.xml`
+  - `app/src/main/res/values-uz/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL` (after each staged batch)
+  - Locale parity check: all locale files `missing=0`, `extra=0`, `total=128`
+
+### Task: localization completion - full translation coverage for all configured languages
+- Status: completed
+- What was done:
+  - Continued localization to completion for all configured app languages:
+    - `ar`, `es`, `fa`, `fr`, `hi`, `in`, `kk`, `ky`, `ms`, `tg`, `tt`, `ur`, `uz`.
+  - Finished translation of remaining untranslated keys in staged safe batches with compile checks after each batch:
+    - settings/status labels,
+    - location flow texts and errors,
+    - calculation method labels and options,
+    - time-offset hints/formats,
+    - calendar labels and holiday section strings,
+    - alarms labels/messages/formats,
+    - prayer names and Duha explanation text,
+    - Hijri month names.
+  - Ensured key parity stayed intact for all locales (`128` keys each, no missing/extra).
+  - Final residual equality with base EN remains only for 2 Arabic holiday-name strings in every locale:
+    - `calendar_holiday_eid_al_fitr_arabic`,
+    - `calendar_holiday_eid_al_adha_arabic`.
+    These are intentionally identical because they are canonical Arabic names.
+- Changed files:
+  - `app/src/main/res/values-ar/strings.xml`
+  - `app/src/main/res/values-es/strings.xml`
+  - `app/src/main/res/values-fa/strings.xml`
+  - `app/src/main/res/values-fr/strings.xml`
+  - `app/src/main/res/values-hi/strings.xml`
+  - `app/src/main/res/values-in/strings.xml`
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-ms/strings.xml`
+  - `app/src/main/res/values-tg/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `app/src/main/res/values-ur/strings.xml`
+  - `app/src/main/res/values-uz/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - Locale parity check: all locale files `missing=0`, `extra=0`, `total=128`
+  - `same_as_en` audit:
+    - all target locales contain only 2 expected same-value keys (Arabic holiday names)
+
+## 2026-05-26
+
+### Task: calendar holidays - Eid al-Adha as 1 day + separate 3 Tashriq days
+- Status: completed
+- What was done:
+  - Updated calendar holiday logic for Eid al-Adha:
+    - Eid day is now treated as 1 day (10 Dhu al-Hijjah / e.g. 27 May 2026).
+    - Tashriq days are treated as the next 3 days (11-13 Dhu al-Hijjah / 28-30 May 2026).
+  - Preserved holiday highlighting in calendar grid and expanded coverage for Eid al-Adha period.
+  - Updated Eid al-Adha block rendering:
+    - main date line now shows only Eid day,
+    - added a separate line for Tashriq days with Hijri and Gregorian ranges.
+  - Added new localized string key for Tashriq line:
+    - EN/RU resources updated.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+
+### Task: enable real app language switching from Settings -> App Language
+- Status: completed
+- What was done:
+  - Implemented working runtime language switching flow from language selection screen.
+  - Added locale application at `MainActivity` context attach stage using saved language from preferences.
+  - Added language selection callback in `LanguageSelectionScreen` and wired it in `MainActivity`.
+  - On language change:
+    - selected language is saved via `SettingsViewModel`,
+    - `MainActivity` is recreated to reload resources and update all UI strings immediately.
+  - Added language-code normalization for Indonesian compatibility (`id` <-> `in`) in runtime comparison.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/LanguageSelectionScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+### Task: Arabic locale naming mode + localized/transliterated location labels
+- Status: completed
+- What was done:
+  - Home prayer cards now use Arabic as primary label in `ar` locale and hide the secondary small Arabic line.
+  - Lesson button prayer title now follows visible prayer title (Arabic in `ar` locale).
+  - Calendar month card in `ar` locale now shows Arabic Hijri month as the main title and hides duplicate Arabic subtitle.
+  - Holiday title line in calendar now shows Arabic-only title in `ar` locale (without transliteration pair).
+  - Hijri holiday date-range formatter now uses Arabic month names in `ar` locale.
+  - Added location UI localization/transliteration helper usage so saved Cyrillic names are displayed per selected app language:
+    - Arabic UI: script transliteration to Arabic when possible,
+    - non-Cyrillic UIs: transliteration to Latin,
+    - Cyrillic UIs: keep original Cyrillic.
+  - Ensured raw location name is preserved in storage, while UI displays localized form.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/PrayerScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/util/LocationNameLocalizer.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `./gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+### Task: fix prayer-name script per selected language (legacy `kz` fallback issue)
+- Status: completed
+- What was done:
+  - Added language-code normalization for locale application and selection flow:
+    - `kz -> kk`
+    - `id -> in`
+  - This fixes fallback to English resources when legacy `kz` was saved in preferences.
+  - Updated locale normalization in:
+    - app startup locale application (`FajrApp`),
+    - language change flow (`MainActivity`),
+    - settings language persistence/restore (`SettingsViewModel`).
+  - Also aligned location-name localization locale mapping with normalized language codes.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/FajrApp.kt`
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerViewModel.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `./gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: switch RTL/LTR layout without manual app restart
+- Status: completed
+- What was done:
+  - Added explicit layout-direction application to locale config:
+    - `config.setLayoutDirection(locale)` in locale update helper.
+  - Added runtime Compose layout-direction provider at app root:
+    - reads selected app language,
+    - applies `LayoutDirection.Rtl` for `ar/fa/ur`, otherwise `LayoutDirection.Ltr`.
+  - This allows immediate RTL<->LTR UI reflow on language switch without force-closing the app.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/FajrApp.kt`
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `./gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: fix stale Russian texts after switching to non-Arabic languages
+- Status: completed
+- What was done:
+  - Root cause: Activity recreation kept existing `ViewModel` instances alive, so previously computed localized strings (prayer names, Hijri/Gregorian date labels, location label) stayed from old locale.
+  - Added explicit `viewModelStore.clear()` during language change before `recreate()`.
+  - This forces fresh `ViewModel` creation in new locale and immediate re-computation of localized UI strings.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `./gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: fix language switch crashes and stale home locale after switching
+- Status: completed
+- What was done:
+  - Replaced problematic language-switch flow (`viewModelStore.clear() + recreate()`) with safe activity relaunch.
+  - New flow on language selection:
+    - save selected language,
+    - finish current `MainActivity`,
+    - start fresh `MainActivity` with `CLEAR_TOP|NEW_TASK`.
+  - This guarantees fresh ViewModel instances with new locale and avoids runtime crashes observed on Cyrillic language switches.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `./gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: add baseline automated tests (unit + UI smoke)
+- Status: completed
+- What was done:
+  - Added unit tests for critical calculation/config mapping logic:
+    - `SettingsViewModel.normalizeDstMode(...)`
+    - `SettingsViewModel.toCalculationMethod(...)`
+    - `SettingsViewModel.toMadhab(...)`
+  - Added Compose UI smoke test for main navigation flow:
+    - open Settings from home,
+    - open Language screen from Settings.
+  - Added instrumentation locale startup smoke test to prevent regressions on locale/crash scenarios:
+    - verifies app starts and loads localized `prayer_fajr` resource for `ru`, `ky`, `kk`, `ar`.
+  - Added missing androidTest dependency:
+    - `androidx.test:core-ktx:1.5.0`.
+- Changed files:
+  - `app/build.gradle.kts`
+  - `app/src/test/java/com/example/fajrapp/viewmodel/SettingsViewModelCompanionTest.kt`
+  - `app/src/androidTest/java/com/example/fajrapp/ui/MainNavigationSmokeTest.kt`
+  - `app/src/androidTest/java/com/example/fajrapp/localization/LocaleStartupSmokeTest.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `./gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`
+  - `./gradlew.bat connectedDebugAndroidTest` -> `BUILD SUCCESSFUL` (2 tests, device `CPH2127 - 12`)
+### Task: add runtime locale-switch UI tests and calendar/alarms smoke tests
+- Status: completed
+- What was done:
+  - Extended instrumentation coverage with runtime language-switch and navigation smoke tests.
+  - Added stable testing hooks in UI:
+    - Home screen semantic content descriptions for opening Calendar/Alarms.
+    - Settings language item semantic content description.
+    - Language list testTag and per-language semantic ids (`lang_<code>`).
+  - Added new instrumentation tests:
+    - `RuntimeLanguageAndNavigationTest`:
+      - runtime switch `en -> ar -> en` without manual app restart,
+      - calendar and alarms screen open smoke checks.
+    - `LocaleDirectionStartupSmokeTest`:
+      - verifies startup layout direction for RTL/LTR locales.
+  - Stabilized instrumentation environment:
+    - in `MainActivity` runtime permission prompt is skipped when running under instrumentation tests (reflection check for `InstrumentationRegistry`), removing flaky test startup failures.
+  - Kept previous baseline tests and ensured compatibility with current Compose test stack.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/PrayerScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/SettingsScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/LanguageSelectionScreen.kt`
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/androidTest/java/com/example/fajrapp/ui/MainNavigationSmokeTest.kt`
+  - `app/src/androidTest/java/com/example/fajrapp/ui/RuntimeLanguageAndNavigationTest.kt`
+  - `app/src/androidTest/java/com/example/fajrapp/localization/LocaleDirectionStartupSmokeTest.kt`
+  - `app/build.gradle.kts`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `./gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`
+  - `./gradlew.bat connectedDebugAndroidTest` -> `BUILD SUCCESSFUL` (5 tests, device `CPH2127 - 12`)
+### Task: fix locale switch white flash and stale home localization updates
+- Status: completed
+- What was done:
+  - Removed hard `MainActivity` restart (`finish + startActivity`) on language switch to eliminate visible white-screen flash.
+  - Added in-place locale apply in `MainActivity` (`resources.updateConfiguration(...)`) and immediate home refresh trigger.
+  - Hoisted `PrayerViewModel` to activity scope and invoked `refreshForLocaleChange()` right after language selection.
+  - Updated `PrayerViewModel` to resolve localized strings and date formatting from selected app language (prefs-based locale context), not stale application default locale.
+  - Included language code in prayer-config signature so locale changes are treated as config changes.
+  - Updated `PrayerScreen` locale detection and time formatting to use `LocalConfiguration` locale instead of `Locale.getDefault()`.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/PrayerScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`
+### Task: fix stale Arabic prayer blocks after switching from Arabic to non-Arabic locales
+- Status: completed
+- What was done:
+  - Root cause: `PrayerScreen` locale-dependent display (`isArabicUi` and time formatters) used UI configuration state that could remain stale after in-place locale switch.
+  - Switched `PrayerScreen` to explicit app language source passed from `MainActivity` (`settingsUiState.selectedLanguage.code`).
+  - Added `appLanguageCode` parameter to `PrayerScreen` and normalized it (`kz->kk`, `id->in`).
+  - Rebased Arabic-mode toggle and clock/countdown formatter locales on this explicit language code, so prayer blocks and numeral rendering update immediately without manual app restart.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/PrayerScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: Hindi locale fixes (Tashriq line + prayer labels in Notifications/Time Offset + localized notifications summary)
+- Status: completed
+- What was done:
+  - Added missing Hindi localization for Tashriq line in calendar holiday block:
+    - `calendar_holiday_tashriq_dates_line` -> `????? ?? ??? (3 ???): %1$s / %2$s`.
+  - Fixed stale non-localized prayer labels and notification summaries after runtime language switch by refactoring `SettingsViewModel` localized caches:
+    - removed one-time `lazy` localization for prayer/method/options labels,
+    - introduced locale-aware cache refresh (`ensureLocalizedCaches`) bound to selected app language,
+    - reloaded settings on language change (`setLanguage` now invalidates locale cache + calls `loadSettings()`),
+    - switched SettingsViewModel `getString(...)` to selected-language localized context via `FajrApp.updateBaseContextLocale(...)`.
+  - Updated locale-sensitive helper calls to use selected app locale (`currentAppLocale`) for city lookup/format helpers and asset title capitalization.
+  - Improved notification sound title resolution so system default title is always localized for current language when `uri == null`.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/main/res/values-hi/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: fix non-localized calculation dropdowns after language switch (all locales, starting with Hindi)
+- Status: completed
+- What was done:
+  - Verified resource coverage for calculation dropdown keys across all supported locales (`ar, es, fa, fr, hi, in, kk, ky, ms, ru, tg, tt, ur, uz`):
+    - `calc_method_*`, `calc_asr_*`, `calc_dst_*`, `settings_offset_default` are translated (`same_as_en=0/16` for each locale).
+  - Root cause identified as runtime language persistence race: language save used async `apply()`, while locale-dependent ViewModel caches were rebuilt immediately.
+  - Switched `saveLanguage(...)` to synchronous `commit()` in `PreferencesManager` so the selected locale is guaranteed to be persisted before immediate cache/state rebuild.
+  - This ensures calculation method / madhab / DST dropdown values and options update in the chosen locale right away.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/data/PreferencesManager.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - Locale audit command confirms translations exist for all target locales (no English fallbacks for listed keys).
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: fix alarm creation form dropdown localization (prayer names + default alarm sound)
+- Status: completed
+- What was done:
+  - Root cause: `PrayerAlarmViewModel` used `lazy`-initialized localized lists (`prayerOptions`, `ringtoneOptions`) and app-context `getString()`, so labels stayed in the locale active at first initialization (often Russian).
+  - Refactored `PrayerAlarmViewModel` to locale-aware cached getters:
+    - added selected-language tracking via prefs (`appLanguageCode()`),
+    - rebuilds localized caches when locale code changes (`ensureLocalizedCaches()`),
+    - switched string resolution to localized context via `FajrApp.updateBaseContextLocale(...)`.
+  - Replaced runtime-dependent prayer sort map with stable key-order map independent of localized labels.
+  - Result: prayer dropdown in alarm add/edit and default ringtone title now follow current app locale immediately.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerAlarmViewModel.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: fix alarm-form dropdown locale sticking to Russian (prayer selector + ringtone default label)
+- Status: completed
+- What was done:
+  - Root cause: `PrayerAlarmViewModel` had `lazy` localized collections (`prayerOptions`, `ringtoneOptions`) initialized once and then reused after runtime language changes.
+  - Refactored to locale-aware cache refresh in `PrayerAlarmViewModel`:
+    - added `ensureLocalizedCaches()` keyed by saved app language,
+    - rebuilt prayer names and ringtone options when locale changes,
+    - switched `getString(...)` to localized context via `FajrApp.updateBaseContextLocale(...)`.
+  - Kept alarm sorting stable via fixed prayer-key order map (independent from localized labels).
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerAlarmViewModel.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: localize Tashriq days line in calendar for all app locales
+- Status: completed
+- What was done:
+  - Confirmed root cause: key `calendar_holiday_tashriq_dates_line` was missing in most locale resource files, so Android used English fallback from base `values/strings.xml`.
+  - Added localized `calendar_holiday_tashriq_dates_line` to all missing locales:
+    - `values-ar`, `values-es`, `values-fa`, `values-fr`, `values-in`, `values-kk`, `values-ky`, `values-ms`, `values-tg`, `values-tt`, `values-ur`, `values-uz`.
+  - Verified key presence in every locale folder (including already present `values-ru` and `values-hi`).
+- Changed files:
+  - `app/src/main/res/values-ar/strings.xml`
+  - `app/src/main/res/values-es/strings.xml`
+  - `app/src/main/res/values-fa/strings.xml`
+  - `app/src/main/res/values-fr/strings.xml`
+  - `app/src/main/res/values-hi/strings.xml` (already had it from previous fix)
+  - `app/src/main/res/values-in/strings.xml`
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-ms/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml` (already had it)
+  - `app/src/main/res/values-tg/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `app/src/main/res/values-ur/strings.xml`
+  - `app/src/main/res/values-uz/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - Locale key audit: `calendar_holiday_tashriq_dates_line` present in all `values*` locales.
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: fix mojibake in locale resources (reported on Farsi/Arabic) and audit all locales
+- Status: completed
+- What was done:
+  - Ran full locale resource audit across all `values-*` files for encoding anomalies.
+  - Confirmed severe mojibake corruption in `values-fa` and `values-ur` (Cyrillic garbage instead of Arabic-script text in many keys).
+  - Applied controlled recovery for affected string values by reversing CP1251-interpreted UTF-8 mojibake at string-node level.
+  - Performed second-pass cleanup for residual mixed lines in `fa/ur`.
+  - Detected and fixed additional mojibake remnants in `values-es` (accented characters rendered as `�...`).
+  - Verified Arabic holiday-name keys are canonical Arabic in all locales:
+    - `calendar_holiday_eid_al_fitr_arabic = ??? ?????`
+    - `calendar_holiday_eid_al_adha_arabic = ??? ??????`
+- Changed files:
+  - `app/src/main/res/values-fa/strings.xml`
+  - `app/src/main/res/values-ur/strings.xml`
+  - `app/src/main/res/values-es/strings.xml`
+  - `app/src/main/res/values-ar/strings.xml` (already corrected in related task)
+  - `app/src/main/res/values-fr/strings.xml`
+  - `app/src/main/res/values-in/strings.xml`
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-ms/strings.xml`
+  - `app/src/main/res/values-tg/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `app/src/main/res/values-uz/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - Scripted locale audit: `values-fa` and `values-ur` now show Arabic-script dominant character counts, no Cyrillic garbage.
+  - Suspicious marker scan after fixes: only expected Cyrillic locales remain.
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\\gradlew.bat installDebug` -> `Installed on 1 device`
+### Task: fix mojibake in Cyrillic locales (`kk`, `ky`, plus detected `tg`, `tt`) and add automated encoding test
+- Status: completed
+- What was done:
+  - Confirmed user-reported mojibake in `values-kk` and `values-ky` (`Р.../С...` corruption).
+  - Ran full locale scan and additionally detected the same corruption pattern in `values-tg` and `values-tt`.
+  - Restored corrupted string values in all four locales by reversing CP1251-interpreted UTF-8 mojibake at string-node level.
+  - Re-ran locale-wide scan to ensure no high mojibake signature remains.
+  - Added unit test `LocaleResourcesEncodingTest` that:
+    - scans all `values*/strings.xml`,
+    - validates UTF-8 text quality (no replacement chars, no high mojibake ratio),
+    - parses each `strings.xml` as XML to catch structural issues.
+- Changed files:
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-tg/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `app/src/test/java/com/example/fajrapp/localization/LocaleResourcesEncodingTest.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - PowerShell locale audit: `LOCALE_SCAN_OK`.
+  - Attempted `.\\gradlew.bat testDebugUnitTest`, but Gradle distribution download was blocked by environment network limits in this session.
+### Task: fix unit-test compatibility (Java 8) and add runtime language cycle UI smoke test
+- Status: completed
+- What was done:
+  - Fixed `LocaleResourcesEncodingTest` compilation issue on Java 8 by replacing `Files.readString(...)` with `String(Files.readAllBytes(...), UTF_8)`.
+  - Replaced stream `.toList()` with Java 8-compatible `.collect(Collectors.toList())`.
+  - Added new instrumentation smoke test `RuntimeLanguageCycleSmokeTest` that:
+    - cycles through all app languages via Settings -> App Language,
+    - returns to Home after each switch without manual app restart,
+    - verifies localized `prayer_fajr` label is displayed on Home for each selected language.
+- Changed files:
+  - `app/src/test/java/com/example/fajrapp/localization/LocaleResourcesEncodingTest.kt`
+  - `app/src/androidTest/java/com/example/fajrapp/localization/RuntimeLanguageCycleSmokeTest.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - Local build/test execution from this sandbox is blocked by network limits for Gradle download.
+  - User-side command to verify unit tests: `.\\gradlew.bat testDebugUnitTest`.
+  - User-side command to verify instrumentation build: `.\\gradlew.bat compileDebugAndroidTestKotlin`.
+### Task: fix failing locale encoding unit-test by removing residual replacement characters in Cyrillic locales
+- Status: completed
+- What was done:
+  - Investigated `LocaleResourcesEncodingTest` failure and found remaining `�` symbols in `calendar_holiday_tashriq_dates_line` for `kk/ky/tg/tt` locales.
+  - Corrected the four corrupted localized strings with proper native-script text.
+  - Re-ran resource scan checks to ensure:
+    - no replacement character `�` remains,
+    - no high mojibake-signature patterns remain.
+- Changed files:
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-tg/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - PowerShell scan: `NO_REPLACEMENT_CHAR`.
+  - Mojibake ratio scan across all locales: no offenders.
+### Task: stabilize failing connected UI test for runtime language switch flow
+- Status: completed
+- What was done:
+  - Investigated `connectedDebugAndroidTest` failure and identified flaky flow in `RuntimeLanguageAndNavigationTest.switchLanguageRtlAndBackToLtrWithoutRestart`.
+  - Root cause: test expected implicit return to Home after language selection, but current navigation keeps user on language/settings stack.
+  - Refactored test to explicit stable flow:
+    - open Language screen from Home via Settings,
+    - select target language,
+    - return with two back presses (`languages -> settings -> home`),
+    - wait for Home readiness before next step.
+- Changed files:
+  - `app/src/androidTest/java/com/example/fajrapp/ui/RuntimeLanguageAndNavigationTest.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat connectedDebugAndroidTest` -> `BUILD SUCCESSFUL`.

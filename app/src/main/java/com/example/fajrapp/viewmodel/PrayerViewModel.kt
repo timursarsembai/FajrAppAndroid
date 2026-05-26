@@ -2,6 +2,7 @@
 
 import android.app.Application
 import android.icu.util.TimeZone as IcuTimeZone
+import android.content.Context
 import android.location.Geocoder
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
@@ -9,10 +10,12 @@ import androidx.lifecycle.viewModelScope
 import com.batoulapps.adhan.Coordinates
 import com.batoulapps.adhan.PrayerTimes
 import com.batoulapps.adhan.data.DateComponents
+import com.example.fajrapp.FajrApp
 import com.example.fajrapp.R
 import com.example.fajrapp.data.LocationManager
 import com.example.fajrapp.data.PreferencesManager
 import com.example.fajrapp.model.PrayerData
+import com.example.fajrapp.util.LocationNameLocalizer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,8 +65,16 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         loadInitialData()
     }
 
+    fun refreshForLocaleChange() {
+        maybeReloadConfiguration(force = true)
+    }
+
     private fun getString(resId: Int): String {
-        return getApplication<Application>().getString(resId)
+        return getLocalizedContext().getString(resId)
+    }
+
+    private fun getString(resId: Int, vararg formatArgs: Any): String {
+        return getLocalizedContext().getString(resId, *formatArgs)
     }
 
     private fun loadInitialData() {
@@ -71,7 +82,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         if (saved != null) {
             currentCoordinates = Coordinates(saved.latitude, saved.longitude)
             _uiState.value = _uiState.value.copy(
-                locationName = saved.cityName,
+                locationName = localizeLocationName(saved.cityName),
                 isLoading = false
             )
             maybeReloadConfiguration(force = true)
@@ -117,11 +128,11 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private fun updateLocationNameAndSave(lat: Double, lon: Double) {
         viewModelScope.launch {
             try {
-                val geocoder = Geocoder(getApplication(), Locale.getDefault())
+                val geocoder = Geocoder(getApplication(), currentAppLocale())
                 @Suppress("DEPRECATION")
                 val addresses = geocoder.getFromLocation(lat, lon, 1)
 
-                val locationName = if (!addresses.isNullOrEmpty()) {
+                val rawLocationName = if (!addresses.isNullOrEmpty()) {
                     val city = addresses[0].locality ?: addresses[0].subAdminArea ?: ""
                     val country = addresses[0].countryName ?: ""
                     if (city.isNotEmpty()) "$city, $country" else country
@@ -129,8 +140,8 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                     getString(R.string.settings_location_unknown)
                 }
 
-                _uiState.value = _uiState.value.copy(locationName = locationName)
-                prefsManager.saveLocation(lat, lon, locationName)
+                _uiState.value = _uiState.value.copy(locationName = localizeLocationName(rawLocationName))
+                prefsManager.saveLocation(lat, lon, rawLocationName)
             } catch (_: Exception) {
                 // Ignore reverse geocoding errors.
             }
@@ -162,10 +173,25 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         )
         val tomorrowTimes = PrayerTimes(currentCoordinates, tomorrowComponents, params)
 
-        val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val appLocale = currentAppLocale()
+        val timeFormatter = SimpleDateFormat("HH:mm", appLocale)
         val now = Date()
 
+        val sunriseOffsetMinutes = offsets[SettingsViewModel.OFFSET_SUNRISE] ?: 0
+        val dhuhrOffsetMinutes = offsets[SettingsViewModel.OFFSET_DHUHR] ?: 0
+        val sunriseWithOffsets = applyOffset(prayerTimes.sunrise, sunriseOffsetMinutes + dstShiftMinutes)
         val duhaTime = applyOffset(prayerTimes.sunrise, 20)
+        val duhaWithOffsets = applyOffset(duhaTime, sunriseOffsetMinutes + dstShiftMinutes)
+        val dhuhrWithOffsets = applyOffset(prayerTimes.dhuhr, dhuhrOffsetMinutes + dstShiftMinutes)
+        val duhaRecommendedStart = applyOffset(dhuhrWithOffsets, -120)
+        val duhaRecommendedEnd = applyOffset(dhuhrWithOffsets, -90)
+        val duhaInfo = getString(
+            R.string.prayer_duha_explanation_format,
+            timeFormatter.format(sunriseWithOffsets),
+            timeFormatter.format(duhaWithOffsets),
+            timeFormatter.format(duhaRecommendedStart),
+            timeFormatter.format(duhaRecommendedEnd)
+        )
         val tahajjudTime = calculateTahajjudStart(
             ishaTime = prayerTimes.isha,
             nextFajrTime = tomorrowTimes.fajr
@@ -202,6 +228,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                     arabicName = entry.arabicName,
                     time = timeFormatter.format(entry.time),
                     timeMillis = entry.time.time,
+                    extraInfo = if (entry.key == "duha") duhaInfo else null,
                     isNext = isNext,
                     isPassed = isPassed && !isNext
                 )
@@ -220,7 +247,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
             )
         }
 
-        val gregorianFormatter = SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
+        val gregorianFormatter = SimpleDateFormat("d MMMM yyyy", appLocale)
         val gregorianDate = gregorianFormatter.format(today.time)
         val hijriDate = calculateHijriDate()
 
@@ -290,17 +317,18 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         val methodCode = prefsManager.getCalculationMethod() ?: "MUSLIM_WORLD_LEAGUE"
         val madhabCode = prefsManager.getMadhab() ?: "HANAFI"
         val dstModeCode = SettingsViewModel.normalizeDstMode(prefsManager.getDstMode())
+        val languageCode = appLanguageCode()
         val dstShift = getConfiguredDstShiftMinutes(Date())
         val offsetSignature = SettingsViewModel.PRAYER_OFFSET_KEYS.joinToString("|") {
             prefsManager.getPrayerOffset(it).toString()
         }
-        val signature = "$lat|$lon|$methodCode|$madhabCode|$dstModeCode|$dstShift|$offsetSignature"
+        val signature = "$lat|$lon|$methodCode|$madhabCode|$dstModeCode|$languageCode|$dstShift|$offsetSignature"
 
         if (!force && signature == lastConfigSignature) return
 
         saved?.let {
             currentCoordinates = Coordinates(it.latitude, it.longitude)
-            _uiState.value = _uiState.value.copy(locationName = it.cityName)
+            _uiState.value = _uiState.value.copy(locationName = localizeLocationName(it.cityName))
         }
 
         lastConfigSignature = signature
@@ -374,7 +402,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
         val normalizedCountry = normalizeToken(countryPart)
         if (normalizedCountry.isEmpty()) return null
 
-        val localesToTry = listOf(Locale.getDefault(), Locale.ENGLISH, Locale("ru"), Locale("kk"))
+        val localesToTry = listOf(currentAppLocale(), Locale.ENGLISH, Locale("ru"), Locale("kk"))
         for (iso in Locale.getISOCountries()) {
             for (locale in localesToTry) {
                 val displayCountry = Locale("", iso).getDisplayCountry(locale)
@@ -426,6 +454,31 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun normalizeToken(value: String): String {
         return value.lowercase(Locale.ROOT).replace(Regex("[^\\p{L}\\p{Nd}]"), "")
+    }
+
+    private fun localizeLocationName(rawName: String): String {
+        return LocationNameLocalizer.localizeForUi(rawName, currentAppLocale())
+    }
+
+    private fun appLanguageCode(): String {
+        val raw = prefsManager.getLanguage().orEmpty()
+        val normalized = when (raw.lowercase(Locale.US)) {
+            "kz" -> "kk"
+            "id" -> "in"
+            else -> raw.lowercase(Locale.US)
+        }
+        return normalized.ifBlank { Locale.getDefault().language.lowercase(Locale.US) }
+    }
+
+    private fun currentAppLocale(): Locale {
+        return Locale(appLanguageCode())
+    }
+
+    private fun getLocalizedContext(): Context {
+        return FajrApp.updateBaseContextLocale(
+            getApplication<Application>(),
+            appLanguageCode()
+        )
     }
 
 }

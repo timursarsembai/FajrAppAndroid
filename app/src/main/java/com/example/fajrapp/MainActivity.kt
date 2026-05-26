@@ -1,6 +1,8 @@
 package com.example.fajrapp
 
 import android.Manifest
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -22,25 +24,36 @@ import com.example.fajrapp.ui.TimeOffsetScreen
 import com.example.fajrapp.ui.PrayerAlarmsScreen
 import com.example.fajrapp.ui.PrayerAlarmAddScreen
 import com.example.fajrapp.ui.PrayerAlarmEditScreen
+import com.example.fajrapp.ui.NotificationSoundPickerScreen
+import com.example.fajrapp.ui.NotificationsSettingsScreen
+import com.example.fajrapp.ui.NOTIFICATION_SOUND_TARGET_GLOBAL
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.fajrapp.ui.PrayerScreen
 import com.example.fajrapp.ui.SettingsScreen
 import com.example.fajrapp.ui.theme.FajrAppTheme
+import com.example.fajrapp.viewmodel.Language
 import com.example.fajrapp.viewmodel.PrayerAlarmViewModel
+import com.example.fajrapp.viewmodel.PrayerViewModel
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -50,19 +63,56 @@ class MainActivity : ComponentActivity() {
         // Permissions handled
     }
 
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("fajr_prefs", Context.MODE_PRIVATE)
+        val langCode = prefs.getString("app_language", "en") ?: "en"
+        super.attachBaseContext(FajrApp.updateBaseContextLocale(newBase, langCode))
+    }
+
+    private fun onLanguageSelected(
+        language: Language,
+        settingsViewModel: SettingsViewModel,
+        prayerViewModel: PrayerViewModel
+    ) {
+        val selectedCode = normalizeLanguageCode(language.code)
+        val currentCode = normalizeLanguageCode(settingsViewModel.uiState.value.selectedLanguage.code)
+        if (currentCode == selectedCode) return
+
+        settingsViewModel.setLanguage(language)
+        applyAppLocale(selectedCode)
+        prayerViewModel.refreshForLocaleChange()
+    }
+
+    private fun normalizeLanguageCode(code: String): String {
+        return when (code.lowercase(Locale.US)) {
+            "kz" -> "kk"
+            "id" -> "in"
+            else -> code.lowercase(Locale.US)
+        }
+    }
+
+    private fun applyAppLocale(languageCode: String) {
+        val localizedContext = FajrApp.updateBaseContextLocale(this, languageCode)
+        val localizedConfig = Configuration(localizedContext.resources.configuration)
+        @Suppress("DEPRECATION")
+        resources.updateConfiguration(localizedConfig, resources.displayMetrics)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
-        requestPermissionLauncher.launch(
-            buildList {
-                add(Manifest.permission.ACCESS_FINE_LOCATION)
-                add(Manifest.permission.ACCESS_COARSE_LOCATION)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    add(Manifest.permission.POST_NOTIFICATIONS)
-                }
-            }.toTypedArray()
-        )
+
+        if (!isRunningInstrumentationTest()) {
+            requestPermissionLauncher.launch(
+                buildList {
+                    add(Manifest.permission.ACCESS_FINE_LOCATION)
+                    add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        add(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }.toTypedArray()
+            )
+        }
 
         setContent {
             FajrAppTheme(darkTheme = true) {
@@ -74,9 +124,16 @@ class MainActivity : ComponentActivity() {
                     val hazeState = remember { HazeState() }
                     val settingsViewModel: SettingsViewModel = viewModel() // Activity-scoped ViewModel
                     val prayerAlarmViewModel: PrayerAlarmViewModel = viewModel()
+                    val prayerViewModel: PrayerViewModel = viewModel()
+                    val settingsUiState by settingsViewModel.uiState.collectAsState()
+                    val appLayoutDirection = when (normalizeLanguageCode(settingsUiState.selectedLanguage.code)) {
+                        "ar", "fa", "ur" -> LayoutDirection.Rtl
+                        else -> LayoutDirection.Ltr
+                    }
 
                     // Shared Background with Haze Source
                     Box(modifier = Modifier.fillMaxSize()) {
+                        CompositionLocalProvider(LocalLayoutDirection provides appLayoutDirection) {
                          Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -134,6 +191,8 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) {
                                 PrayerScreen(
+                                    viewModel = prayerViewModel,
+                                    appLanguageCode = normalizeLanguageCode(settingsUiState.selectedLanguage.code),
                                     hazeState = hazeState,
                                     onSettingsClick = { navController.navigate("settings") },
                                     onCalendarClick = { navController.navigate("calendar") },
@@ -316,7 +375,86 @@ class MainActivity : ComponentActivity() {
                                     onBack = { navController.popBackStack() },
                                     onLanguageClick = { navController.navigate("languages") },
                                     onLocationClick = { navController.navigate("location") },
-                                    onCalculationMethodClick = { navController.navigate("calculation_method") }
+                                    onCalculationMethodClick = { navController.navigate("calculation_method") },
+                                    onNotificationsClick = { navController.navigate("notifications") }
+                                )
+                            }
+
+                            composable(
+                                "notifications",
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
+                            ) {
+                                NotificationsSettingsScreen(
+                                    viewModel = settingsViewModel,
+                                    hazeState = hazeState,
+                                    onBack = { navController.popBackStack() },
+                                    onGlobalSoundClick = {
+                                        navController.navigate("notifications_sound/$NOTIFICATION_SOUND_TARGET_GLOBAL")
+                                    },
+                                    onPrayerSoundClick = { prayerKey ->
+                                        navController.navigate("notifications_sound/$prayerKey")
+                                    }
+                                )
+                            }
+
+                            composable(
+                                "notifications_sound/{targetKey}",
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        animationSpec = tween(260),
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 4) }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        animationSpec = tween(260),
+                                        targetOffsetX = { fullWidth -> fullWidth }
+                                    )
+                                }
+                            ) { backStackEntry ->
+                                val targetKey = backStackEntry.arguments?.getString("targetKey")
+                                    ?: NOTIFICATION_SOUND_TARGET_GLOBAL
+                                NotificationSoundPickerScreen(
+                                    targetKey = targetKey,
+                                    viewModel = settingsViewModel,
+                                    hazeState = hazeState,
+                                    onBack = { navController.popBackStack() },
+                                    onSelected = { navController.popBackStack() }
                                 )
                             }
                             
@@ -350,7 +488,10 @@ class MainActivity : ComponentActivity() {
                                 LanguageSelectionScreen(
                                     viewModel = settingsViewModel,
                                     hazeState = hazeState,
-                                    onBack = { navController.popBackStack() }
+                                    onBack = { navController.popBackStack() },
+                                    onLanguageSelected = { language ->
+                                        onLanguageSelected(language, settingsViewModel, prayerViewModel)
+                                    }
                                 )
                             }
 
@@ -457,9 +598,19 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+                        }
                     }
                 }
             }
         }
+    }
+
+    private fun isRunningInstrumentationTest(): Boolean {
+        return runCatching {
+            val registryClass = Class.forName("androidx.test.platform.app.InstrumentationRegistry")
+            val getInstrumentation = registryClass.getMethod("getInstrumentation")
+            getInstrumentation.invoke(null)
+            true
+        }.getOrDefault(false)
     }
 }
