@@ -223,7 +223,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     private fun loadSettings() {
         ensureLocalizedCaches()
-        val savedLangCode = normalizeAppLanguageCode(prefsManager.getLanguage() ?: "en")
+        val savedLangCode = normalizeAppLanguageCode(
+            FajrApp.ensureAppLanguagePreference(getApplication())
+        )
         val selectedLanguage = availableLanguages.find { it.code == savedLangCode } ?: availableLanguages.first()
         val savedLocation = prefsManager.getSavedLocation()
         val selectedCalcCode = sanitizeMethodCode(prefsManager.getCalculationMethod())
@@ -755,9 +757,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun appLanguageCode(): String {
-        val raw = prefsManager.getLanguage().orEmpty()
-        val normalized = normalizeAppLanguageCode(raw)
-        return normalized.ifBlank { Locale.getDefault().language.lowercase(Locale.US) }
+        val raw = FajrApp.ensureAppLanguagePreference(getApplication())
+        return normalizeAppLanguageCode(raw)
     }
 
     private fun currentAppLocale(): Locale {

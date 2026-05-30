@@ -34,7 +34,7 @@ class LocaleStartupSmokeTest {
         )
         verifyLocaleStartup(
             languageCode = "kk",
-            expectedFajr = "Фаджр"
+            expectedFajr = "Таң (Фәжр)"
         )
         verifyLocaleStartup(
             languageCode = "ar",

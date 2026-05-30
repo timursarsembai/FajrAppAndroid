@@ -38,11 +38,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalLayoutDirection
 import com.example.fajrapp.R
 import com.example.fajrapp.ui.components.GlassContainer
 import dev.chrisbanes.haze.HazeState
@@ -95,6 +97,7 @@ fun HijriCalendarScreen(
 
     val locale = Locale.getDefault()
     val isArabicUi = locale.language.equals("ar", ignoreCase = true)
+    val isRtlUi = LocalLayoutDirection.current == LayoutDirection.Rtl
     var monthOffset by rememberSaveable { mutableIntStateOf(0) }
 
     val baseMonthStart = remember {
@@ -194,6 +197,7 @@ fun HijriCalendarScreen(
             weekDays = weekDays,
             hazeState = hazeState,
             isArabicUi = isArabicUi,
+            isRtlUi = isRtlUi,
             isCurrentMonth = monthOffset == 0,
             onPreviousMonth = { monthOffset -= 1 },
             onNextMonth = { monthOffset += 1 },
@@ -259,6 +263,7 @@ private fun MonthCalendarCard(
     weekDays: List<String>,
     hazeState: HazeState,
     isArabicUi: Boolean,
+    isRtlUi: Boolean,
     isCurrentMonth: Boolean,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
@@ -326,6 +331,8 @@ private fun MonthCalendarCard(
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val previousMonthIcon = if (isRtlUi) Icons.Default.ChevronRight else Icons.Default.ChevronLeft
+                    val nextMonthIcon = if (isRtlUi) Icons.Default.ChevronLeft else Icons.Default.ChevronRight
                     if (!isCurrentMonth) {
                         MonthSwitchButton(
                             icon = Icons.Default.Refresh,
@@ -335,13 +342,13 @@ private fun MonthCalendarCard(
                         )
                     }
                     MonthSwitchButton(
-                        icon = Icons.Default.ChevronLeft,
+                        icon = previousMonthIcon,
                         contentDescription = stringResource(R.string.calendar_prev_month),
                         hazeState = hazeState,
                         onClick = onPreviousMonth
                     )
                     MonthSwitchButton(
-                        icon = Icons.Default.ChevronRight,
+                        icon = nextMonthIcon,
                         contentDescription = stringResource(R.string.calendar_next_month),
                         hazeState = hazeState,
                         onClick = onNextMonth

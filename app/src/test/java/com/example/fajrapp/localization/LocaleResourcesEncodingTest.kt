@@ -11,11 +11,13 @@ import org.junit.Test
 
 class LocaleResourcesEncodingTest {
 
+    private val controlCharsPattern = Regex("[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F-\\u009F]")
     private val suspiciousPatterns = listOf(
         Regex("Р[А-Яа-яЁё]"),
         Regex("С[А-Яа-яЁё]"),
         Regex("[ЃЌЉЊЎўЈЅћќњ]")
     )
+    private val alternatingMojibakePattern = Regex("(?:(?:Р|С|Т|У)[\\u0080-\\u00BF\\u2018-\\u203A]){2,}")
 
     @Test
     fun localeStringResources_areValidUtf8AndNotMojibake() {
@@ -34,6 +36,14 @@ class LocaleResourcesEncodingTest {
 
             val text = String(Files.readAllBytes(stringsFile), StandardCharsets.UTF_8)
             assertTrue("Found UTF-8 replacement char in $stringsFile", !text.contains('\uFFFD'))
+            assertTrue(
+                "Found control/non-printable characters in $stringsFile",
+                !controlCharsPattern.containsMatchIn(text)
+            )
+            assertTrue(
+                "Found classic alternating mojibake sequence in $stringsFile",
+                !alternatingMojibakePattern.containsMatchIn(text)
+            )
 
             // If this ratio is high, text is likely UTF-8 bytes decoded as Windows-1251.
             val suspiciousCount = suspiciousPatterns.sumOf { it.findAll(text).count() }

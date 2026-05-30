@@ -28,7 +28,7 @@
   <string name="location_city_title">Шәһәр</string>
   <string name="location_city_input_label">Шәһәр исеме</string>
   <string name="location_city_find_button">Шәһәр табу</string>
-  <string name="location_searching">Р­Р·Р»У™ТЇ...</string>
+  <string name="location_searching">Эзләү...</string>
   <string name="location_coordinates_title">Координатлар</string>
   <string name="location_latitude_label">Киңлек</string>
   <string name="location_longitude_label">Озынлык</string>
@@ -63,7 +63,7 @@
   <string name="lesson_prayer_format">%1$s намазы дәресләре</string>
   <string name="calendar_title">Календарь</string>
   <string name="calendar_unavailable">Календарь Android 8.0 һәм яңарак версияләрдә генә эшли.</string>
-  <string name="calendar_year_format">%1$d РµР» (%2$s)</string>
+  <string name="calendar_year_format">%1$d ел (%2$s)</string>
   <string name="calendar_week_mon">ДШ</string>
   <string name="calendar_week_tue">СШ</string>
   <string name="calendar_week_wed">ЧШ</string>
@@ -128,7 +128,7 @@
   <string name="hijri_rabi_al_athani">Рабиг әс-сани</string>
   <string name="hijri_jumada_al_ula">Җөмәдәл-әүвәл</string>
   <string name="hijri_jumada_al_akhirah">Җөмәдәс-сани</string>
-  <string name="hijri_rajab">Р Р°Т—У™Р±</string>
+  <string name="hijri_rajab">Рәҗәб</string>
   <string name="hijri_shaban">Шәгъбан</string>
   <string name="hijri_ramadan">Рамазан</string>
   <string name="hijri_shawwal">Шәүвәл</string>

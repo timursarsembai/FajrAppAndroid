@@ -63,7 +63,7 @@
   <string name="lesson_prayer_format">%1$s намазының сабақтары</string>
   <string name="calendar_title">Күнтізбе</string>
   <string name="calendar_unavailable">Күнтізбе Android 8.0 және жаңа нұсқаларда қолжетімді.</string>
-  <string name="calendar_year_format">%1$d Р¶. (%2$s)</string>
+  <string name="calendar_year_format">%1$d ж. (%2$s)</string>
   <string name="calendar_week_mon">ДС</string>
   <string name="calendar_week_tue">СС</string>
   <string name="calendar_week_wed">СР</string>
@@ -113,13 +113,13 @@
   <string name="footer_dua">Алла дұғаларыңызды қабыл етсін</string>
   <string name="timer_prefix">кейін</string>
   <!-- Prayer Names -->
-  <string name="prayer_fajr">Фаджр</string>
-  <string name="prayer_sunrise">Духа</string>
-  <string name="prayer_dhuhr">Зухр</string>
-  <string name="prayer_asr">Аср</string>
-  <string name="prayer_maghrib">Магриб</string>
-  <string name="prayer_isha">РС€Р°</string>
-  <string name="prayer_tahajjud">Тахаджуд</string>
+  <string name="prayer_fajr">Таң (Фәжр)</string>
+  <string name="prayer_sunrise">Сәске (Духа)</string>
+  <string name="prayer_dhuhr">Бесін (Зұхр)</string>
+  <string name="prayer_asr">Екінті (Асыр)</string>
+  <string name="prayer_maghrib">Ақшам (Мағриб)</string>
+  <string name="prayer_isha">Құптан (Ғиша)</string>
+  <string name="prayer_tahajjud">Түнгі намаз (Тахаджуд)</string>
   <string name="prayer_duha_explanation_format">Есептелген күн шығу уақыты: %1$s. Оған 20 минут қосқанда Духа намазы уақыты басталады: %2$s. Сүннет бойынша Духа намазын кейінірек, Зухр намазына шамамен 1.5-2 сағат қалғанда оқу абзал, яғни шамамен %3$s-%4$s аралығында.</string>
   <!-- Hijri Months -->
   <string name="hijri_muharram">Мухаррам</string>
@@ -128,7 +128,7 @@
   <string name="hijri_rabi_al_athani">Раби әс-сани</string>
   <string name="hijri_jumada_al_ula">Жумада әл-уля</string>
   <string name="hijri_jumada_al_akhirah">Жумада әс-сания</string>
-  <string name="hijri_rajab">Р Р°Р¶Р°Р±</string>
+  <string name="hijri_rajab">Ражаб</string>
   <string name="hijri_shaban">Шағбан</string>
   <string name="hijri_ramadan">Рамазан</string>
   <string name="hijri_shawwal">Шәууәл</string>

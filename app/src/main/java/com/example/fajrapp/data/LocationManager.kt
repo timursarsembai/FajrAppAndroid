@@ -22,8 +22,21 @@ class LocationManager(private val context: Context) {
                 cancellationTokenSource.token
             ).await()
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    suspend fun getLastKnownLocation(): Location? {
+        return try {
+            fusedLocationClient.lastLocation.await()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    suspend fun getBestAvailableLocation(): Location? {
+        return getCurrentLocation() ?: getLastKnownLocation()
     }
 }

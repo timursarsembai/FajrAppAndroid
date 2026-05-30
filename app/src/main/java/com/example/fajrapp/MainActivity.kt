@@ -2,7 +2,6 @@ package com.example.fajrapp
 
 import android.Manifest
 import android.content.Context
-import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -57,15 +56,20 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
+    private var prayerViewModelRef: PrayerViewModel? = null
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { _ ->
-        // Permissions handled
+    ) { grantResults ->
+        val hasLocationPermission = grantResults[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            grantResults[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (hasLocationPermission) {
+            prayerViewModelRef?.refreshLocationFromDevice()
+        }
     }
 
     override fun attachBaseContext(newBase: Context) {
-        val prefs = newBase.getSharedPreferences("fajr_prefs", Context.MODE_PRIVATE)
-        val langCode = prefs.getString("app_language", "en") ?: "en"
+        val langCode = FajrApp.ensureAppLanguagePreference(newBase)
         super.attachBaseContext(FajrApp.updateBaseContextLocale(newBase, langCode))
     }
 
@@ -79,8 +83,8 @@ class MainActivity : ComponentActivity() {
         if (currentCode == selectedCode) return
 
         settingsViewModel.setLanguage(language)
-        applyAppLocale(selectedCode)
         prayerViewModel.refreshForLocaleChange()
+        recreate()
     }
 
     private fun normalizeLanguageCode(code: String): String {
@@ -89,13 +93,6 @@ class MainActivity : ComponentActivity() {
             "id" -> "in"
             else -> code.lowercase(Locale.US)
         }
-    }
-
-    private fun applyAppLocale(languageCode: String) {
-        val localizedContext = FajrApp.updateBaseContextLocale(this, languageCode)
-        val localizedConfig = Configuration(localizedContext.resources.configuration)
-        @Suppress("DEPRECATION")
-        resources.updateConfiguration(localizedConfig, resources.displayMetrics)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -125,6 +122,7 @@ class MainActivity : ComponentActivity() {
                     val settingsViewModel: SettingsViewModel = viewModel() // Activity-scoped ViewModel
                     val prayerAlarmViewModel: PrayerAlarmViewModel = viewModel()
                     val prayerViewModel: PrayerViewModel = viewModel()
+                    prayerViewModelRef = prayerViewModel
                     val settingsUiState by settingsViewModel.uiState.collectAsState()
                     val appLayoutDirection = when (normalizeLanguageCode(settingsUiState.selectedLanguage.code)) {
                         "ar", "fa", "ur" -> LayoutDirection.Rtl

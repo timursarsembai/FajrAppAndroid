@@ -63,11 +63,11 @@
   <string name="lesson_prayer_format">%1$s намазынын сабактары</string>
   <string name="calendar_title">Жылнаама</string>
   <string name="calendar_unavailable">Календарь Android 8.0 жана андан жогору версияларда жеткиликтүү.</string>
-  <string name="calendar_year_format">%1$d-Р¶. (%2$s)</string>
+  <string name="calendar_year_format">%1$d-ж. (%2$s)</string>
   <string name="calendar_week_mon">ДҮШ</string>
   <string name="calendar_week_tue">ШЕЙ</string>
   <string name="calendar_week_wed">ШАР</string>
-  <string name="calendar_week_thu">Р‘Р•Р™</string>
+  <string name="calendar_week_thu">БЕЙ</string>
   <string name="calendar_week_fri">ЖУМ</string>
   <string name="calendar_week_sat">ИШМ</string>
   <string name="calendar_week_sun">ЖЕК</string>
@@ -118,7 +118,7 @@
   <string name="prayer_dhuhr">Зухр</string>
   <string name="prayer_asr">Аср</string>
   <string name="prayer_maghrib">Магриб</string>
-  <string name="prayer_isha">РС€Р°</string>
+  <string name="prayer_isha">Иша</string>
   <string name="prayer_tahajjud">Тахажжуд</string>
   <string name="prayer_duha_explanation_format">Эсептелген күн чыгуу убактысы: %1$s. Ага 20 мүнөт кошкондо Духа намазынын башталышы: %2$s. Сүннөт боюнча Духа намазын кечирээк, Зухрга болжол менен 1.5-2 саат калганда окуу жакшы, болжол менен %3$s-%4$s аралыгы.</string>
   <!-- Hijri Months -->
@@ -128,7 +128,7 @@
   <string name="hijri_rabi_al_athani">Раби ас-сани</string>
   <string name="hijri_jumada_al_ula">Жумада аль-уля</string>
   <string name="hijri_jumada_al_akhirah">Жумада ас-сания</string>
-  <string name="hijri_rajab">Р Р°Р¶Р°Р±</string>
+  <string name="hijri_rajab">Ражаб</string>
   <string name="hijri_shaban">Шабан</string>
   <string name="hijri_ramadan">Рамазан</string>
   <string name="hijri_shawwal">Шавваль</string>

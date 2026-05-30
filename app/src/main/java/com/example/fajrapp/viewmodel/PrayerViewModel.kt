@@ -14,6 +14,7 @@ import com.example.fajrapp.FajrApp
 import com.example.fajrapp.R
 import com.example.fajrapp.data.LocationManager
 import com.example.fajrapp.data.PreferencesManager
+import com.example.fajrapp.data.SavedLocation
 import com.example.fajrapp.model.PrayerData
 import com.example.fajrapp.util.LocationNameLocalizer
 import kotlinx.coroutines.delay
@@ -57,8 +58,8 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
     private var cachedRegionTimeZone: TimeZone? = null
     private var cachedRegionTimeZoneKey: String? = null
 
-    // Default coordinates (Almaty, Kazakhstan)
-    private var currentCoordinates = Coordinates(43.238949, 76.945465)
+    // Fallback coordinates used only until a saved/device location is resolved.
+    private var currentCoordinates = Coordinates(0.0, 0.0)
 
     init {
         _uiState.value = _uiState.value.copy(locationName = getString(R.string.str_loading))
@@ -67,6 +68,15 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun refreshForLocaleChange() {
         maybeReloadConfiguration(force = true)
+    }
+
+    fun refreshLocationFromDevice() {
+        viewModelScope.launch {
+            val location = locationManager.getBestAvailableLocation() ?: return@launch
+            currentCoordinates = Coordinates(location.latitude, location.longitude)
+            updateLocationNameAndSave(location.latitude, location.longitude)
+            maybeReloadConfiguration(force = true)
+        }
     }
 
     private fun getString(resId: Int): String {
@@ -92,7 +102,7 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
         viewModelScope.launch {
             try {
-                val location = locationManager.getCurrentLocation()
+                val location = findBestLocationWithRetries(saved)
                 if (location != null) {
                     val isDifferent = if (saved != null) {
                         val results = FloatArray(1)
@@ -114,15 +124,31 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                         maybeReloadConfiguration(force = true)
                     }
                 } else if (saved == null) {
-                    _uiState.value = _uiState.value.copy(locationName = "Almaty, Kazakhstan")
+                    _uiState.value = _uiState.value.copy(
+                        locationName = getString(R.string.settings_location_unknown),
+                        isLoading = false
+                    )
                     maybeReloadConfiguration(force = true)
                 }
             } catch (_: Exception) {
                 if (saved == null) {
-                    _uiState.value = _uiState.value.copy(locationName = "Almaty, Kazakhstan")
+                    _uiState.value = _uiState.value.copy(
+                        locationName = getString(R.string.settings_location_unknown),
+                        isLoading = false
+                    )
                 }
             }
         }
+    }
+
+    private suspend fun findBestLocationWithRetries(saved: SavedLocation?): android.location.Location? {
+        val attempts = if (saved == null) 5 else 2
+        repeat(attempts) { attempt ->
+            val resolved = locationManager.getBestAvailableLocation()
+            if (resolved != null) return resolved
+            if (attempt < attempts - 1) delay(1500L)
+        }
+        return null
     }
 
     private fun updateLocationNameAndSave(lat: Double, lon: Double) {
@@ -140,12 +166,14 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
                     getString(R.string.settings_location_unknown)
                 }
 
-                _uiState.value = _uiState.value.copy(locationName = localizeLocationName(rawLocationName))
-                prefsManager.saveLocation(lat, lon, rawLocationName)
-            } catch (_: Exception) {
-                // Ignore reverse geocoding errors.
-            }
+            _uiState.value = _uiState.value.copy(locationName = localizeLocationName(rawLocationName))
+            prefsManager.saveLocation(lat, lon, rawLocationName)
+        } catch (_: Exception) {
+            val fallbackName = "${formatCoordinate(lat)}, ${formatCoordinate(lon)}"
+            _uiState.value = _uiState.value.copy(locationName = fallbackName)
+            prefsManager.saveLocation(lat, lon, fallbackName)
         }
+    }
     }
 
     private fun calculatePrayerTimes() {
@@ -454,6 +482,10 @@ class PrayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun normalizeToken(value: String): String {
         return value.lowercase(Locale.ROOT).replace(Regex("[^\\p{L}\\p{Nd}]"), "")
+    }
+
+    private fun formatCoordinate(value: Double): String {
+        return String.format(Locale.US, "%.6f", value)
     }
 
     private fun localizeLocationName(rawName: String): String {

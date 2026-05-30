@@ -1529,3 +1529,148 @@
   - `CHANGELOG_AGENT.md`
 - Verification:
   - `.\\gradlew.bat connectedDebugAndroidTest` -> `BUILD SUCCESSFUL`.
+### Task: add release notes and implement automatic app locale from device locale
+- Status: completed
+- What was done:
+  - Added project release notes file with summary of delivered features/fixes.
+  - Implemented centralized language resolver in `FajrApp`:
+    - uses saved app language if set and supported,
+    - otherwise auto-detects device language,
+    - falls back to English (`en`) when unsupported.
+  - Wired resolver into app/activity startup:
+    - `FajrApp.attachBaseContext`,
+    - `FajrApp.onConfigurationChanged`,
+    - `MainActivity.attachBaseContext`.
+  - Updated `SettingsViewModel` to use resolved app language source consistently.
+  - Added unit tests for language resolution behavior (stored value, aliases, device fallback, default English fallback).
+- Changed files:
+  - `RELEASE_NOTES.md`
+  - `app/src/main/java/com/example/fajrapp/FajrApp.kt`
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/test/java/com/example/fajrapp/FajrAppLanguageResolutionTest.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+  - `.\\gradlew.bat compileDebugAndroidTestKotlin` -> `BUILD SUCCESSFUL`.
+### Task: self-audit locales for residual mojibake and harden detection test
+- Status: completed
+- What was done:
+  - Performed full locale self-audit (without user-provided pointers) across all `values*/strings.xml`.
+  - Found residual corrupted strings in Cyrillic locales and fixed them:
+    - `values-kk`: `prayer_isha`, `hijri_rajab`
+    - `values-ky`: `prayer_isha`, `hijri_rajab`
+    - `values-tg`: `hijri_rajab`
+    - `values-tt`: `location_searching`, `hijri_rajab`
+  - Strengthened `LocaleResourcesEncodingTest` to catch additional corruption classes:
+    - control/non-printable characters (C0/C1 ranges),
+    - classic alternating mojibake byte-pattern sequences.
+- Changed files:
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-tg/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `app/src/test/java/com/example/fajrapp/localization/LocaleResourcesEncodingTest.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+  - Extra grep scan for known broken fragments and replacement character -> no matches.
+### Task: runtime smoke verification after locale self-audit
+- Status: completed
+- What was done:
+  - Ran connected instrumentation suite on physical device after locale fixes.
+- Verification:
+  - `.\\gradlew.bat connectedDebugAndroidTest` -> `BUILD SUCCESSFUL` (6 tests on CPH2127).
+### Task: fix remaining mojibake in calendar year block (user hint) and strengthen detector
+- Status: completed
+- What was done:
+  - Verified user hint and found residual mojibake in calendar year block strings:
+    - `values-kk`: `calendar_year_format`
+    - `values-ky`: `calendar_year_format`
+    - `values-tt`: `calendar_year_format`
+  - Found and fixed related broken weekday abbreviation in `values-ky`:
+    - `calendar_week_thu`.
+  - Updated locale encoding test pattern to catch shorter classic mojibake byte-sequences as well.
+- Changed files:
+  - `app/src/main/res/values-kk/strings.xml`
+  - `app/src/main/res/values-ky/strings.xml`
+  - `app/src/main/res/values-tt/strings.xml`
+  - `app/src/test/java/com/example/fajrapp/localization/LocaleResourcesEncodingTest.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - Scripted scan: `NO_SUSPECT_MOJIBAKE_SEQUENCES`.
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+### Task: update Kazakh prayer names per user-approved terminology
+- Status: completed
+- What was done:
+  - Updated Kazakh locale prayer labels to requested forms:
+    - `prayer_fajr`: `Таң (Фәжр)`
+    - `prayer_dhuhr`: `Бесін (Зұхр)`
+    - `prayer_asr`: `Екінті (Асыр)`
+    - `prayer_maghrib`: `Ақшам (Мағриб)`
+    - `prayer_isha`: `Құптан (Ғиша)`
+- Changed files:
+  - `app/src/main/res/values-kk/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+### Task: align Kazakh Duha and Tahajjud labels to local-name-plus-parentheses style
+- Status: completed
+- What was done:
+  - Updated Kazakh prayer labels:
+    - `prayer_sunrise`: `Сәске (Духа)`
+    - `prayer_tahajjud`: `Түнгі намаз (Тахаджуд)`
+- Changed files:
+  - `app/src/main/res/values-kk/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+### Task: fix calendar month-switch arrow order for RTL locales
+- Status: completed
+- What was done:
+  - Updated month navigation arrow icons in calendar to respect UI direction (`LocalLayoutDirection`).
+  - For RTL locales, previous-month button now appears on the left and next-month button on the right, as requested.
+  - Kept LTR behavior unchanged.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/HijriCalendarScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+### Task: harden location-name localization across scripts (fix leaked source-specific letters like ң in RTL)
+- Status: completed
+- What was done:
+  - Reworked `LocationNameLocalizer` to script-aware pipeline:
+    - detect target UI script by language (Arabic/Cyrillic/Devanagari/Latin),
+    - use transliteration via target script with fallback through Latin pivot,
+    - reject mixed/partial transliterations where source-script letters leak into target-script output,
+    - keep readable Latin fallback when target transliteration is not acceptable.
+  - This specifically addresses cases like Kazakh-specific Cyrillic letters leaking into Arabic UI location labels.
+  - Updated instrumentation smoke expectation for Kazakh Fajr label to match latest approved terminology.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/util/LocationNameLocalizer.kt`
+  - `app/src/androidTest/java/com/example/fajrapp/localization/LocaleStartupSmokeTest.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+  - `.\\gradlew.bat connectedDebugAndroidTest` -> `BUILD SUCCESSFUL` (6 tests).
+### Task: fix partial runtime locale switch and first-launch default Almaty behavior
+- Status: completed
+- What was done:
+  - Fixed partial locale switch (Home changed, other screens stale):
+    - language selection now triggers full `Activity` recreation after saving app language,
+    - this forces all `stringResource(...)` screens (Calendar/Alarms/Settings/etc.) to rebind to the new locale immediately.
+  - Removed hardcoded first-launch fallback `Almaty, Kazakhstan` from `PrayerViewModel`.
+  - Improved startup location resolution:
+    - added `LocationManager.getLastKnownLocation()` and `getBestAvailableLocation()`,
+    - added retry-based initial resolution in `PrayerViewModel` to tolerate delayed GPS availability.
+  - Added immediate location refresh when user grants location permission from system prompt:
+    - permission callback in `MainActivity` now calls `PrayerViewModel.refreshLocationFromDevice()`.
+  - If reverse geocoding fails, app now saves/displays coordinate fallback instead of stale/default city label.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `app/src/main/java/com/example/fajrapp/data/LocationManager.kt`
+  - `app/src/main/java/com/example/fajrapp/viewmodel/PrayerViewModel.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+  - `.\\gradlew.bat compileDebugAndroidTestKotlin` -> `BUILD SUCCESSFUL`.
