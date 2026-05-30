@@ -1,8 +1,11 @@
 package com.example.fajrapp.data
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.pm.PackageManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -12,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.example.fajrapp.MainActivity
 import com.example.fajrapp.R
 import com.example.fajrapp.model.PrayerAlarm
@@ -36,6 +40,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         )
     }
 
+    @SuppressLint("MissingPermission")
     private fun showAlarmNotification(context: Context, alarm: PrayerAlarm, channelId: String) {
         val openAppIntent = Intent(context, MainActivity::class.java)
         val contentIntent = PendingIntent.getActivity(
@@ -59,7 +64,12 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
             .setSound(soundUri)
             .build()
 
-        NotificationManagerCompat.from(context).notify(alarm.id + NOTIFICATION_ID_BASE, notification)
+        if (!canPostNotifications(context)) return
+        runCatching {
+            NotificationManagerCompat.from(context).notify(alarm.id + NOTIFICATION_ID_BASE, notification)
+        }.onFailure {
+            if (it !is SecurityException) throw it
+        }
     }
 
     private fun createAlarmChannel(context: Context, alarm: PrayerAlarm): String {
@@ -105,5 +115,16 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
     companion object {
         private const val CHANNEL_ID = "prayer_alarm_channel"
         private const val NOTIFICATION_ID_BASE = 6000
+    }
+
+    private fun canPostNotifications(context: Context): Boolean {
+        val manager = NotificationManagerCompat.from(context)
+        if (!manager.areNotificationsEnabled()) return false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
     }
 }

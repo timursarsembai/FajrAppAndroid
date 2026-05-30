@@ -1674,3 +1674,45 @@
 - Verification:
   - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
   - `.\\gradlew.bat compileDebugAndroidTestKotlin` -> `BUILD SUCCESSFUL`.
+### Task: create standalone security audit checklist before vulnerability assessment
+- Status: completed
+- What was done:
+  - Added dedicated markdown checklist covering full Android app security review scope before running vulnerability assessment.
+  - Checklist includes: manifest/components, permissions, storage, network, crypto, logging/privacy, alarms/notifications, dependencies/CVE, build/release hardening, and final reporting.
+- Changed files:
+  - `SECURITY_CHECKLIST.md`
+  - `CHANGELOG_AGENT.md`
+### Task: perform vulnerability assessment and produce security report
+- Status: completed
+- What was done:
+  - Executed static security review using `SECURITY_CHECKLIST.md` as scope.
+  - Ran Android Lint (`lintDebug`) and extracted security-relevant findings.
+  - Produced consolidated security report with severity, evidence, and remediation plan.
+- Changed files:
+  - `SECURITY_AUDIT_REPORT.md`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - Lint report generated: `app/build/reports/lint-results-debug.html`.
+  - Security-relevant lint finding captured in report (`MissingPermission` for notifications).
+### Task: remediate identified security issues (high/medium/low)
+- Status: completed
+- What was done:
+  - Security hardening in manifest:
+    - removed unnecessary `INTERNET` permission,
+    - set `android:allowBackup="false"`,
+    - restricted exported boot receiver with `android.permission.RECEIVE_BOOT_COMPLETED`.
+  - Notification safety fix:
+    - added runtime notification-permission gate and defensive `SecurityException` handling before `notify(...)`.
+  - Release hardening:
+    - enabled `isMinifyEnabled = true` and `isShrinkResources = true` for release builds.
+    - added explicit `androidx.fragment:fragment-ktx:1.6.2` to satisfy lintVital release checker for ActivityResult API.
+  - Updated security report with post-remediation status.
+- Changed files:
+  - `app/src/main/AndroidManifest.xml`
+  - `app/src/main/java/com/example/fajrapp/data/PrayerAlarmReceiver.kt`
+  - `app/build.gradle.kts`
+  - `SECURITY_AUDIT_REPORT.md`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+  - `.\\gradlew.bat assembleRelease` -> `BUILD SUCCESSFUL`.
