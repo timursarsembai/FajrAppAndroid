@@ -166,6 +166,15 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             return notificationSoundOptionsCache
         }
 
+    fun notificationSoundOptionsForTarget(targetKey: String): List<NotificationSoundOption> {
+        ensureLocalizedCaches()
+        return when (targetKey) {
+            OFFSET_FAJR -> notificationSoundOptionsCache
+            NOTIFICATION_TARGET_GLOBAL -> notificationSoundOptionsCache
+            else -> notificationSoundOptionsCache.filter { it.sourceKey != SOUND_SOURCE_AZAN_FAJR }
+        }
+    }
+
     init {
         loadSettings()
     }
@@ -513,26 +522,16 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             )
         )
 
-        try {
-            val azanFiles = app.assets.list("audio/azan").orEmpty()
-                .filter { name ->
-                    val lower = name.lowercase(Locale.US)
-                    lower.endsWith(".mp3") || lower.endsWith(".wav") || lower.endsWith(".ogg") || lower.endsWith(".m4a")
-                }
-                .sortedBy { it.lowercase(Locale.US) }
-
-            azanFiles.forEach { fileName ->
-                result.add(
-                    NotificationSoundOption(
-                        uri = "asset://audio/azan/$fileName",
-                        title = prettifyAssetName(fileName),
-                        sourceKey = SOUND_SOURCE_AZAN
-                    )
-                )
-            }
-        } catch (_: Exception) {
-            // Ignore assets read errors.
-        }
+        addAzanAssetOptions(
+            result = result,
+            directory = "audio/azan",
+            sourceKey = SOUND_SOURCE_AZAN
+        )
+        addAzanAssetOptions(
+            result = result,
+            directory = "audio/azan/fajr",
+            sourceKey = SOUND_SOURCE_AZAN_FAJR
+        )
 
         val manager = RingtoneManager(app).apply {
             setType(RingtoneManager.TYPE_ALARM)
@@ -557,6 +556,34 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
 
         return result
+    }
+
+    private fun addAzanAssetOptions(
+        result: MutableList<NotificationSoundOption>,
+        directory: String,
+        sourceKey: String
+    ) {
+        val app = getApplication<Application>()
+        try {
+            val files = app.assets.list(directory).orEmpty()
+                .filter { name ->
+                    val lower = name.lowercase(Locale.US)
+                    lower.endsWith(".mp3") || lower.endsWith(".wav") || lower.endsWith(".ogg") || lower.endsWith(".m4a")
+                }
+                .sortedBy { it.lowercase(Locale.US) }
+
+            files.forEach { fileName ->
+                result.add(
+                    NotificationSoundOption(
+                        uri = "asset://$directory/$fileName",
+                        title = prettifyAssetName(fileName),
+                        sourceKey = sourceKey
+                    )
+                )
+            }
+        } catch (_: Exception) {
+            // Ignore assets read errors.
+        }
     }
 
     private fun prettifyAssetName(fileName: String): String {
@@ -787,6 +814,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         const val PRAYER_TAHAJJUD = "tahajjud"
         const val SOUND_SOURCE_SYSTEM = "system"
         const val SOUND_SOURCE_AZAN = "azan"
+        const val SOUND_SOURCE_AZAN_FAJR = "azan_fajr"
+        const val NOTIFICATION_TARGET_GLOBAL = "global"
         val PRAYER_OFFSET_KEYS = listOf(
             OFFSET_FAJR,
             OFFSET_SUNRISE,

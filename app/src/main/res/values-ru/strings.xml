@@ -24,7 +24,10 @@
     <string name="notification_sound_label">Звук</string>
     <string name="notification_sound_system_default">Системный звук по умолчанию</string>
     <string name="notification_sounds_azan">Азаны</string>
+    <string name="notification_sounds_azan_fajr">Азан для Фаджра</string>
     <string name="notification_sounds_system">Стандартные звуки</string>
+    <string name="notification_sound_preview_play">Прослушать</string>
+    <string name="notification_sound_preview_stop">Остановить</string>
     <string name="location_use_current">Использовать текущую локацию</string>
     <string name="location_hint">Можно использовать автоопределение, поиск города или координаты</string>
     <string name="location_city_title">Город</string>

@@ -24,7 +24,10 @@
     <string name="notification_sound_label">Sound</string>
     <string name="notification_sound_system_default">System default sound</string>
     <string name="notification_sounds_azan">Azan sounds</string>
+    <string name="notification_sounds_azan_fajr">Azan for Fajr</string>
     <string name="notification_sounds_system">System sounds</string>
+    <string name="notification_sound_preview_play">Play</string>
+    <string name="notification_sound_preview_stop">Stop</string>
     <string name="location_use_current">Use current location</string>
     <string name="location_hint">You can use auto-detection, city search, or coordinates</string>
     <string name="location_city_title">City</string>

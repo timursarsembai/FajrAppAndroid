@@ -1743,3 +1743,30 @@
 - Verification:
   - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
   - `.\\gradlew.bat compileDebugAndroidTestKotlin` -> `BUILD SUCCESSFUL`.
+### Task: add separate Fajr azan selection and sound preview in notification settings
+- Status: completed
+- What was done:
+  - Added support for two azan asset groups:
+    - `audio/azan` for general prayers.
+    - `audio/azan/fajr` for Fajr-specific azan.
+  - Updated notification sound source model with `azan_fajr` group.
+  - Added target-aware filtering:
+    - Fajr and global sound pickers can see both azan groups.
+    - Non-Fajr prayer pickers hide Fajr-only azan files.
+  - Added in-picker preview playback (play/pause) for each sound option:
+    - supports system default sound,
+    - supports system ringtone URIs,
+    - supports `asset://...` azan files.
+  - Added new UI labels in base and Russian resources:
+    - `notification_sounds_azan_fajr`
+    - `notification_sound_preview_play`
+    - `notification_sound_preview_stop`
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/viewmodel/SettingsViewModel.kt`
+  - `app/src/main/java/com/example/fajrapp/ui/NotificationsSettingsScreen.kt`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/main/res/values-ru/strings.xml`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat assembleDebug` -> `BUILD SUCCESSFUL`
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`

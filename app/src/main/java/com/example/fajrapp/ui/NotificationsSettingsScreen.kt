@@ -1,5 +1,9 @@
 package com.example.fajrapp.ui
 
+import android.content.Context
+import android.media.MediaPlayer
+import android.media.RingtoneManager
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,12 +25,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,7 +50,7 @@ import com.example.fajrapp.viewmodel.NotificationSoundOption
 import com.example.fajrapp.viewmodel.SettingsViewModel
 import dev.chrisbanes.haze.HazeState
 
-const val NOTIFICATION_SOUND_TARGET_GLOBAL = "global"
+const val NOTIFICATION_SOUND_TARGET_GLOBAL = SettingsViewModel.NOTIFICATION_TARGET_GLOBAL
 
 @Composable
 fun NotificationsSettingsScreen(
@@ -196,11 +206,42 @@ fun NotificationSoundPickerScreen(
     onSelected: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val options = viewModel.notificationSoundOptions
+    val options = viewModel.notificationSoundOptionsForTarget(targetKey)
     val selectedUri = if (targetKey == NOTIFICATION_SOUND_TARGET_GLOBAL) {
         uiState.notificationsGlobalSoundUri
     } else {
         uiState.notificationsByPrayer.firstOrNull { it.prayerKey == targetKey }?.soundUri
+    }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var currentlyPlayingUri by remember { mutableStateOf<String?>(null) }
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+
+    fun stopPreview() {
+        mediaPlayer?.setOnCompletionListener(null)
+        mediaPlayer?.release()
+        mediaPlayer = null
+        currentlyPlayingUri = null
+    }
+
+    fun playPreview(uri: String?) {
+        if (currentlyPlayingUri == uri) {
+            stopPreview()
+            return
+        }
+        stopPreview()
+        val player = createPreviewPlayer(context, uri) ?: return
+        mediaPlayer = player
+        currentlyPlayingUri = uri
+        player.setOnCompletionListener {
+            stopPreview()
+        }
+        player.start()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            stopPreview()
+        }
     }
 
     val title = if (targetKey == NOTIFICATION_SOUND_TARGET_GLOBAL) {
@@ -265,6 +306,8 @@ fun NotificationSoundPickerScreen(
             grouped.forEach { (sourceKey, sourceOptions) ->
                 val sourceTitle = if (sourceKey == SettingsViewModel.SOUND_SOURCE_AZAN) {
                     stringResource(R.string.notification_sounds_azan)
+                } else if (sourceKey == SettingsViewModel.SOUND_SOURCE_AZAN_FAJR) {
+                    stringResource(R.string.notification_sounds_azan_fajr)
                 } else {
                     stringResource(R.string.notification_sounds_system)
                 }
@@ -281,6 +324,7 @@ fun NotificationSoundPickerScreen(
                     NotificationSoundOptionItem(
                         option = option,
                         selected = option.uri == selectedUri,
+                        isPlaying = option.uri == currentlyPlayingUri,
                         hazeState = hazeState,
                         onClick = {
                             if (targetKey == NOTIFICATION_SOUND_TARGET_GLOBAL) {
@@ -288,7 +332,11 @@ fun NotificationSoundPickerScreen(
                             } else {
                                 viewModel.setPrayerNotificationSound(targetKey, option)
                             }
+                            stopPreview()
                             onSelected()
+                        },
+                        onPreviewClick = {
+                            playPreview(option.uri)
                         }
                     )
                 }
@@ -344,8 +392,10 @@ private fun NotificationSoundRow(
 private fun NotificationSoundOptionItem(
     option: NotificationSoundOption,
     selected: Boolean,
+    isPlaying: Boolean,
     hazeState: HazeState,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onPreviewClick: () -> Unit
 ) {
     GlassContainer(
         cornerRadius = 14.dp,
@@ -365,6 +415,19 @@ private fun NotificationSoundOptionItem(
                 color = Color.White,
                 modifier = Modifier.weight(1f)
             )
+            Icon(
+                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                contentDescription = if (isPlaying) {
+                    stringResource(R.string.notification_sound_preview_stop)
+                } else {
+                    stringResource(R.string.notification_sound_preview_play)
+                },
+                tint = Color.White.copy(alpha = 0.9f),
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable { onPreviewClick() }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             if (selected) {
                 Icon(
                     imageVector = Icons.Default.Check,
@@ -374,5 +437,37 @@ private fun NotificationSoundOptionItem(
                 )
             }
         }
+    }
+}
+
+private fun createPreviewPlayer(context: Context, soundUri: String?): MediaPlayer? {
+    return try {
+        val mediaPlayer = MediaPlayer()
+        if (soundUri == null) {
+            val defaultUri = RingtoneManager.getActualDefaultRingtoneUri(
+                context,
+                RingtoneManager.TYPE_ALARM
+            ) ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            if (defaultUri == null) {
+                mediaPlayer.release()
+                return null
+            }
+            mediaPlayer.setDataSource(context, defaultUri)
+        } else if (soundUri.startsWith("asset://")) {
+            val path = soundUri.removePrefix("asset://")
+            context.assets.openFd(path).use { assetFile ->
+                mediaPlayer.setDataSource(
+                    assetFile.fileDescriptor,
+                    assetFile.startOffset,
+                    assetFile.length
+                )
+            }
+        } else {
+            mediaPlayer.setDataSource(context, Uri.parse(soundUri))
+        }
+        mediaPlayer.prepare()
+        mediaPlayer
+    } catch (_: Exception) {
+        null
     }
 }
