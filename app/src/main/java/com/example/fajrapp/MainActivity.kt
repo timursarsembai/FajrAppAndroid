@@ -13,6 +13,8 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fajrapp.viewmodel.SettingsViewModel
 import com.example.fajrapp.ui.LanguageSelectionScreen
@@ -28,21 +30,28 @@ import com.example.fajrapp.ui.NotificationsSettingsScreen
 import com.example.fajrapp.ui.NOTIFICATION_SOUND_TARGET_GLOBAL
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.fajrapp.ui.PrayerScreen
 import com.example.fajrapp.ui.SettingsScreen
@@ -124,6 +133,7 @@ class MainActivity : ComponentActivity() {
                     val prayerViewModel: PrayerViewModel = viewModel()
                     prayerViewModelRef = prayerViewModel
                     val settingsUiState by settingsViewModel.uiState.collectAsState()
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val appLayoutDirection = when (normalizeLanguageCode(settingsUiState.selectedLanguage.code)) {
                         "ar", "fa", "ur" -> LayoutDirection.Rtl
                         else -> LayoutDirection.Ltr
@@ -596,6 +606,14 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+
+                        val currentRoute = navBackStackEntry?.destination?.route
+                        val canSwipeBack = navController.previousBackStackEntry != null && currentRoute != "home"
+                        EdgeSwipeBackOverlay(
+                            enabled = canSwipeBack,
+                            layoutDirection = appLayoutDirection,
+                            onBack = { navController.popBackStack() }
+                        )
                         }
                     }
                 }
@@ -610,5 +628,63 @@ class MainActivity : ComponentActivity() {
             getInstrumentation.invoke(null)
             true
         }.getOrDefault(false)
+    }
+}
+
+@Composable
+private fun EdgeSwipeBackOverlay(
+    enabled: Boolean,
+    layoutDirection: LayoutDirection,
+    onBack: () -> Unit
+) {
+    if (!enabled) return
+
+    val density = LocalDensity.current
+    val edgeWidthDp = 28.dp
+    val triggerDistancePx = with(density) { 72.dp.toPx() }
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(edgeWidthDp)
+                .align(
+                    if (layoutDirection == LayoutDirection.Ltr) {
+                        Alignment.CenterStart
+                    } else {
+                        Alignment.CenterEnd
+                    }
+                )
+                .pointerInput(enabled, layoutDirection) {
+                    if (!enabled) return@pointerInput
+                    var totalDx = 0f
+
+                    detectHorizontalDragGestures(
+                        onDragStart = {
+                            totalDx = 0f
+                        },
+                        onHorizontalDrag = { _, dragAmount ->
+                            totalDx += dragAmount
+                            val shouldGoBack = if (layoutDirection == LayoutDirection.Ltr) {
+                                totalDx >= triggerDistancePx
+                            } else {
+                                totalDx <= -triggerDistancePx
+                            }
+                            if (shouldGoBack) {
+                                onBack()
+                                totalDx = 0f
+                            }
+                        },
+                        onDragCancel = {
+                            totalDx = 0f
+                        },
+                        onDragEnd = {
+                            totalDx = 0f
+                        }
+                    )
+                }
+        )
     }
 }

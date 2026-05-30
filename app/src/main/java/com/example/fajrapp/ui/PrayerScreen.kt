@@ -23,8 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -32,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -67,7 +64,6 @@ fun PrayerScreen(
     onClockClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val expandedStates = remember { mutableStateMapOf<String, Boolean>() }
     val normalizedLanguageCode = remember(appLanguageCode) {
         when (appLanguageCode.lowercase(Locale.US)) {
             "kz" -> "kk"
@@ -214,7 +210,6 @@ fun PrayerScreen(
                     val titleSize = if (isNext) prayerNameFontSize * 1.15f else prayerNameFontSize
                     val timeSize = if (isNext) prayerTimeFontSize * 1.15f else prayerTimeFontSize
 
-                    val isExpanded = expandedStates[prayer.key] ?: false
                     PrayerItem(
                         prayer = prayer,
                         titleSize = titleSize,
@@ -223,8 +218,6 @@ fun PrayerScreen(
                         locale = currentLocale,
                         isArabicUi = isArabicUi,
                         hazeState = hazeState,
-                        isExpanded = isExpanded,
-                        onToggleExpand = { expandedStates[prayer.key] = !isExpanded },
                         timerPrefix = stringResource(R.string.timer_prefix),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -244,8 +237,6 @@ private fun PrayerItem(
     locale: Locale,
     isArabicUi: Boolean,
     hazeState: HazeState,
-    isExpanded: Boolean,
-    onToggleExpand: () -> Unit,
     timerPrefix: String,
     modifier: Modifier = Modifier
 ) {
@@ -275,107 +266,69 @@ private fun PrayerItem(
         hazeState = hazeState,
         blurEnabled = false
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onToggleExpand() }
-                    .padding(internalPadding),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (prayer.isPassed) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(internalPadding),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (prayer.isPassed) {
+                Box(
+                    modifier = Modifier
+                        .size(iconBoxSize)
+                        .clickable(enabled = false) {}
+                        .padding(0.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     Box(
                         modifier = Modifier
                             .size(iconBoxSize)
-                            .clickable(enabled = false) {}
-                            .padding(0.dp),
+                            .background(
+                                color = Color.White.copy(alpha = 0.22f),
+                                shape = CircleShape
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(iconBoxSize)
-                                .background(
-                                    color = Color.White.copy(alpha = 0.22f),
-                                    shape = CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(iconSize)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(checkMarkSpacer))
-                }
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = displayName,
-                        color = if (prayer.isNext) highlightColor else Color.White,
-                        fontSize = titleSize,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (!isArabicUi) {
-                        Text(
-                            text = prayer.arabicName,
-                            color = Color.White.copy(alpha = 0.6f),
-                            fontSize = arabicSize
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(iconSize)
                         )
                     }
                 }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = prayer.time,
-                        color = if (prayer.isNext) highlightColor else Color.White,
-                        fontSize = timeSize,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (prayer.isNext) {
-                        NextPrayerCountdownText(
-                            targetTimeMillis = prayer.timeMillis,
-                            timerPrefix = timerPrefix,
-                            locale = locale,
-                            fontSize = timeLeftSize
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp * scale))
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.85f)
-                )
+                Spacer(modifier = Modifier.width(checkMarkSpacer))
             }
 
-            if (isExpanded) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = internalPadding, end = internalPadding, bottom = internalPadding),
-                    verticalArrangement = Arrangement.spacedBy(8.dp * scale)
-                ) {
-                    prayer.extraInfo?.let { infoText ->
-                        Text(
-                            text = infoText,
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontSize = (12 * scale).sp,
-                            lineHeight = (16 * scale).sp
-                        )
-                    }
-                    LessonButton(
-                        text = stringResource(R.string.lesson_wudu),
-                        hazeState = hazeState,
-                        scale = scale
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = displayName,
+                    color = if (prayer.isNext) highlightColor else Color.White,
+                    fontSize = titleSize,
+                    fontWeight = FontWeight.Bold
+                )
+                if (!isArabicUi) {
+                    Text(
+                        text = prayer.arabicName,
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = arabicSize
                     )
-                    LessonButton(
-                        text = stringResource(R.string.lesson_prayer_format, displayName),
-                        hazeState = hazeState,
-                        scale = scale
+                }
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = prayer.time,
+                    color = if (prayer.isNext) highlightColor else Color.White,
+                    fontSize = timeSize,
+                    fontWeight = FontWeight.Bold
+                )
+                if (prayer.isNext) {
+                    NextPrayerCountdownText(
+                        targetTimeMillis = prayer.timeMillis,
+                        timerPrefix = timerPrefix,
+                        locale = locale,
+                        fontSize = timeLeftSize
                     )
                 }
             }
@@ -442,34 +395,3 @@ private fun NextPrayerCountdownText(
         fontSize = fontSize
     )
 }
-
-@Composable
-private fun LessonButton(
-    text: String,
-    hazeState: HazeState,
-    scale: Float
-) {
-    GlassContainer(
-        cornerRadius = 14.dp * scale,
-        hazeState = hazeState,
-        blurEnabled = false,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(44.dp * scale)
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                color = Color.White.copy(alpha = 0.55f),
-                fontWeight = FontWeight.SemiBold,
-                fontSize = (14 * scale).sp
-            )
-        }
-    }
-}
-
-
-

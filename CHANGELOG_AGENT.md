@@ -1716,3 +1716,30 @@
 - Verification:
   - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
   - `.\\gradlew.bat assembleRelease` -> `BUILD SUCCESSFUL`.
+### Task: add edge-swipe back navigation with RTL mirroring
+- Status: completed
+- What was done:
+  - Added global edge-swipe back gesture for screens where back navigation is available (all non-home routes).
+  - Implemented mirrored edge behavior for RTL locales:
+    - LTR: swipe from left edge to right.
+    - RTL: swipe from right edge to left.
+  - Gesture is limited to a narrow edge strip to avoid blocking normal taps/scrolls in screen content.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/MainActivity.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+  - `.\\gradlew.bat connectedDebugAndroidTest` -> `BUILD SUCCESSFUL` (6 tests).
+### Task: temporarily remove prayer-time dropdowns and lesson buttons on home screen
+- Status: completed
+- What was done:
+  - Removed expand/collapse dropdown behavior for prayer time cards on the main screen.
+  - Removed nested content previously shown inside expanded cards.
+  - Removed lesson action buttons (`lesson_wudu` and prayer-specific lesson button) from main prayer cards.
+  - Prayer cards are now static blocks showing name, Arabic subtitle (non-Arabic UI), time, and next-prayer countdown.
+- Changed files:
+  - `app/src/main/java/com/example/fajrapp/ui/PrayerScreen.kt`
+  - `CHANGELOG_AGENT.md`
+- Verification:
+  - `.\\gradlew.bat testDebugUnitTest` -> `BUILD SUCCESSFUL`.
+  - `.\\gradlew.bat compileDebugAndroidTestKotlin` -> `BUILD SUCCESSFUL`.
